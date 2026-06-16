@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     0.0.0
+// @version     v1.0.0
 // @namespace   gh.paytonison
 // @description Add compact buttons to download images and videos from X/Twitter.
 // @match       https://twitter.com/*
