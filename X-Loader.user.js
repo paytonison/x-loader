@@ -1755,10 +1755,6 @@ function getUserScriptCSS() {
     --ujs-btn-radius: 5px;
     --ujs-btn-offset: 6px;
     --ujs-dot-size: 5px;
-    --ujs-shadow-1: linear-gradient(to top, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
-    --ujs-shadow-2: linear-gradient(to top, rgba(0,0,0,0.25), rgba(0,0,0,0.05));
-    --ujs-shadow-3: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.15));
-    --ujs-shadow-4: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.25));
     --ujs-red:   #e0245e;
     --ujs-blue:  #1da1f2;
     --ujs-green: #4caf50;
@@ -1767,20 +1763,42 @@ function getUserScriptCSS() {
 }
 
 .ujs-progress {
-  background-image: linear-gradient(to right, var(--ujs-green) var(--progress), transparent 0%);
+  background:
+    linear-gradient(to right, rgba(76, 175, 80, 0.52) var(--progress), transparent 0%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+  border: 0;
+  opacity: 0.92;
 }
 
 .ujs-shadow {
-  background-image: var(--ujs-shadow-1);
+  background: transparent;
+  border: 0;
+  box-shadow: var(--x-loader-glass-shadow);
+  transition: box-shadow 160ms ease;
+}
+.ujs-shadow::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: var(--x-loader-glass-sheen);
+  opacity: 0.5;
+  pointer-events: none;
 }
 .ujs-btn-download:hover .ujs-hover {
-  background-image: var(--ujs-shadow-2);
+  opacity: 1;
 }
 .ujs-btn-download.ujs-downloading .ujs-shadow {
-  background-image: var(--ujs-shadow-3);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.34),
+    0 1px 3px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .ujs-btn-download:active .ujs-shadow {
-  background-image: var(--ujs-shadow-4);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.36),
+    0 1px 2px rgba(0, 0, 0, 0.26),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12);
 }
 
 .ujs-btn-download.ujs-downloaded.ujs-recently-downloaded {
@@ -1818,9 +1836,40 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   position: absolute;
   opacity: 0;
   z-index: 2;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  transform: translateY(0);
+  transition:
+    opacity 180ms ease,
+    transform 160ms ease;
+  --ujs-btn-radius: 999px;
+  --x-loader-glass-bg: rgba(17, 18, 20, 0.72);
+  --x-loader-glass-bg-fallback: rgba(20, 21, 23, 0.94);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.34)" : "rgba(194, 203, 208, 0.28)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.38);
+  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.32);
+  --x-loader-glass-shadow:
+    0 7px 16px rgba(0, 0, 0, 0.30),
+    0 1px 3px rgba(0, 0, 0, 0.24);
+  --x-loader-glass-text: rgba(255, 255, 255, 0.94);
+  --x-loader-glass-dot: rgba(255, 255, 255, 0.62);
+  --x-loader-glass-sheen:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.12) 34%, rgba(255, 255, 255, 0) 62%);
+}
+.ujs-btn-download:hover {
+  transform: translateY(-1px);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.42)" : "rgba(194, 203, 208, 0.34)"};
+  --x-loader-glass-shadow:
+    0 9px 18px rgba(0, 0, 0, 0.34),
+    0 2px 4px rgba(0, 0, 0, 0.26);
+}
+.ujs-btn-download:active {
+  transform: translateY(0);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.25)" : "rgba(194, 203, 208, 0.22)"};
+}
+.ujs-btn-download:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.58);
+  outline-offset: 3px;
 }
 .ujs-btn-common {
   width: var(--ujs-btn-size);
@@ -1830,14 +1879,79 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   left: 0;
   position: absolute;
   box-sizing: border-box;
-  border: 1px solid ${settings.addBorder ? "rgba(255, 255, 255, 0.95)" : "var(--ujs-gray)"};
+  border: 0;
 }
-.ujs-not-downloaded .ujs-btn-background {
-  background: black;
+.ujs-btn-background,
+.ujs-hover,
+.ujs-progress,
+.ujs-btn-error-text {
+  overflow: hidden;
 }
-
-.ujs-already-downloaded .ujs-btn-background {
-  background: var(--ujs-gray);
+.ujs-btn-background {
+  color: var(--x-loader-glass-text);
+  background:
+    linear-gradient(180deg, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.16)),
+    radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 58%),
+    var(--x-loader-glass-bg);
+  border: 1px solid var(--x-loader-glass-border);
+  -webkit-backdrop-filter: blur(18px) saturate(165%);
+  backdrop-filter: blur(18px) saturate(165%);
+  box-shadow:
+    inset 0 1px 0 var(--x-loader-glass-highlight),
+    inset 0 -1px 1px var(--x-loader-glass-bottom-shadow);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    filter 160ms ease,
+    box-shadow 160ms ease;
+}
+.ujs-hover {
+  background:
+    radial-gradient(90% 80% at 28% 0%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+  border: 0;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.ujs-btn-download:hover .ujs-btn-background {
+  filter: brightness(1.06) saturate(1.08);
+}
+.ujs-btn-download:active .ujs-btn-background {
+  filter: brightness(0.92) saturate(1.04);
+}
+.ujs-btn-download:active .ujs-hover {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.18));
+  opacity: 1;
+}
+.ujs-btn-download:focus-visible .ujs-btn-background {
+  border-color: rgba(255, 255, 255, 0.58);
+}
+.ujs-btn-download.ujs-already-downloaded,
+.ujs-btn-download.ujs-downloaded {
+  --x-loader-glass-bg: rgba(194, 203, 208, 0.70);
+  --x-loader-glass-bg-fallback: rgba(194, 203, 208, 0.96);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.48)" : "rgba(255, 255, 255, 0.24)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.62);
+  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.18);
+  --x-loader-glass-text: rgba(13, 16, 18, 0.9);
+  --x-loader-glass-dot: rgba(13, 16, 18, 0.38);
+}
+.ujs-btn-download.ujs-error {
+  --x-loader-glass-bg: rgba(255, 255, 255, 0.78);
+  --x-loader-glass-bg-fallback: rgba(255, 255, 255, 0.96);
+  --x-loader-glass-border: rgba(255, 255, 255, 0.56);
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.72);
+  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.16);
+  --x-loader-glass-text: rgba(0, 0, 0, 0.9);
+  --x-loader-glass-dot: rgba(0, 0, 0, 0.34);
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .ujs-btn-download .ujs-btn-background {
+    background:
+      linear-gradient(180deg, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.16)),
+      radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 58%),
+      var(--x-loader-glass-bg-fallback);
+  }
 }
 
 .ujs-btn-done {
@@ -1847,19 +1961,11 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   box-shadow: 0 0 6px var(--ujs-red);
 }
 
-.ujs-downloaded .ujs-btn-background {
-  background: var(--ujs-gray);
-}
-
-.ujs-error .ujs-btn-background {
-  background: var(--ujs-error);
-}
-
 .ujs-btn-error-text {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: black;
+  color: var(--x-loader-glass-text);
   font-size: 100%;
 }
 .ujs-modal-settings fieldset {
@@ -1894,7 +2000,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
     position: absolute;
     width: var(--ujs-dot-size);
     height: var(--ujs-dot-size);
-    background: rgba(255, 255, 255, 0.5) linear-gradient(to right, white var(--media-progress), transparent 0%);
+    background: var(--x-loader-glass-dot) linear-gradient(to right, var(--x-loader-glass-text) var(--media-progress), transparent 0%);
     border-radius: 25%;
 
     bottom: 2px;
@@ -1905,13 +2011,13 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
     right: 1px;
 
     background: transparent;
-    border-top:   1px solid rgba(255, 255, 255, 0.5);
-    border-right: 1px solid rgba(255, 255, 255, 0.5);
+    border-top:   1px solid var(--x-loader-glass-dot);
+    border-right: 1px solid var(--x-loader-glass-dot);
 }
 
 .ujs-btn-download[data-is-multi-media].ujs-media-progress-complete .ujs-dot.ujs-back {
-    border-top:   1px solid white;
-    border-right: 1px solid white;
+    border-top:   1px solid var(--x-loader-glass-text);
+    border-right: 1px solid var(--x-loader-glass-text);
 }
 
 `;
