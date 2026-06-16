@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     v1.0.0
+// @version     v1.0.1
 // @namespace   gh.paytonison
 // @description Add compact buttons to download images and videos from X/Twitter.
 // @match       https://twitter.com/*
@@ -1775,6 +1775,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   position: absolute;
   opacity: 0;
   z-index: 2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -1789,11 +1790,11 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   border: 1px solid ${settings.addBorder ? "rgba(255, 255, 255, 0.95)" : "var(--ujs-gray)"};
 }
 .ujs-not-downloaded .ujs-btn-background {
-  background: var(--ujs-red);
+  background: black;
 }
 
 .ujs-already-downloaded .ujs-btn-background {
-  background: var(--ujs-blue);
+  background: var(--ujs-gray);
 }
 
 .ujs-btn-done {
@@ -1804,7 +1805,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 
 .ujs-downloaded .ujs-btn-background {
-  background: var(--ujs-green);
+  background: var(--ujs-gray);
 }
 
 .ujs-error .ujs-btn-background {
