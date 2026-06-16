@@ -1,23 +1,22 @@
 // ==UserScript==
 // @name        X-Loader
 // @version     0.0.0
-// @namespace   gh.alttiri
-// @description Add buttons to download images and videos in Twitter, also does some other enhancements.
+// @namespace   gh.paytonison
+// @description Add compact buttons to download images and videos from X/Twitter.
 // @match       https://twitter.com/*
 // @match       https://x.com/*
-// @homepageURL https://github.com/AlttiRi/twitter-click-and-save
-// @supportURL  https://github.com/AlttiRi/twitter-click-and-save/issues
+// @homepageURL https://github.com/paytonison/x-loader
+// @supportURL  https://github.com/paytonison/x-loader/issues
 // @license     GPL-3.0
 // @grant       GM.registerMenuCommand
-// @icon        https://raw.githubusercontent.com/AlttiRi/twitter-click-and-save/master/x-icon-with-button.png
-// @downloadURL https://update.greasyfork.org/scripts/430132/Twitter%20Click%27n%27Save.user.js
-// @updateURL https://update.greasyfork.org/scripts/430132/Twitter%20Click%27n%27Save.meta.js
+// @downloadURL https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
+// @updateURL   https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
 // ==/UserScript==
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
-// Please, report bugs and suggestions on GitHub, not Greasyfork. I rarely visit Greasyfork.
-// --> https://github.com/AlttiRi/twitter-click-and-save/issues <--
+// Please report bugs and suggestions on GitHub.
+// --> https://github.com/paytonison/x-loader/issues <--
 
 // ---------------------------------------------------------------------------------------------------------------------
 const sitename = location.hostname.replace(".com", ""); // "twitter" | "x"
@@ -124,7 +123,7 @@ const datePattern = "YYYY.MM.DD";
  * I strongly do NOT recommend to change the filename pattern format.
  *
  * The filename may look a bit long, but here I wrote why the used filename pattern is the way it is:
- * https://github.com/AlttiRi/twitter-click-and-save?tab=readme-ov-file#filename-format
+ * Keep the date, author, tweet id, and media name in the filename so repeated downloads remain easy to identify.
  *
  * If you really need to change it, and you understand WHAT and WHY you do,
  * you can modify the follow lines in the source code.
@@ -221,6 +220,13 @@ function execFeatures() {
 // --- Script runner --- //
 
 (function starter(feats) {
+  if (!document.body) {
+    document.addEventListener("DOMContentLoaded", () => starter(feats), {
+      once: true,
+    });
+    return;
+  }
+
   const { once, onChangeImmediate, onChange } = feats;
 
   once();
@@ -228,7 +234,7 @@ function execFeatures() {
   const onChangeThrottled = throttle(onChange, 250);
   onChangeThrottled();
 
-  const targetNode = document.querySelector("body");
+  const targetNode = document.body;
   const observerOptions = {
     subtree: true,
     childList: true,
@@ -621,13 +627,14 @@ function hoistFeatures() {
     static resetMediaProgress(btn) {
       const mediaProgress = btn.querySelector(".ujs-media-progress");
       mediaProgress.style.cssText = "--media-progress: 0%";
+      btn.classList.remove("ujs-media-progress-complete");
     }
     static setMediaProgress(btn, downloaded, total) {
       const mediaProgress = btn.querySelector(".ujs-media-progress");
+      const progress = Math.min(100, (downloaded / total) * 100 + 10);
       mediaProgress.style.cssText =
-        "--media-progress: " +
-        Math.min(100, (downloaded / total) * 100 + 10) +
-        "%";
+        "--media-progress: " + progress + "%";
+      btn.classList.toggle("ujs-media-progress-complete", progress >= 100);
     }
     static isDownloaded(btn) {
       return (
@@ -882,12 +889,12 @@ function hoistFeatures() {
         } else {
           // expanded_url
           await sleep(10);
-          const match = location.pathname.match(/(?<=\/video\/)\d/);
+          const match = location.pathname.match(/\/video\/(\d)/);
           if (!match) {
             verbose &&
               console.log("[ujs][videoHandler] missed match for match");
           }
-          videoIndex = Number(match[0]) - 1;
+          videoIndex = Number(match?.[1] || 1) - 1;
 
           console.warn("[ujs][videoHandler] videoIndex", videoIndex);
           // todo: add support for expanded_url video downloading
@@ -992,7 +999,7 @@ function hoistFeatures() {
       const username = location.pathname.slice(1).split("/")[0];
       const { id, seconds, res } =
         url.match(
-          /(?<=\/profile_banners\/)(?<id>\d+)\/(?<seconds>\d+)\/(?<res>\d+x\d+)/,
+          /\/profile_banners\/(?<id>\d+)\/(?<seconds>\d+)\/(?<res>\d+x\d+)/,
         )?.groups || {};
       // https://pbs.twimg.com/profile_banners/34743251/1596331248/1500x500
 
@@ -1352,8 +1359,8 @@ function hoistFeatures() {
         ":",
       );
       titleText = titleText.replace(
-        new RegExp(`(?<=${CLOSE_QUOTE}) \\\/ ${I18N.TWITTER}$`),
-        "",
+        new RegExp(`${CLOSE_QUOTE} \\\/ ${I18N.TWITTER}$`),
+        CLOSE_QUOTE,
       );
       if (!lastUrlIsAttachment) {
         const regExp = new RegExp(
@@ -1701,6 +1708,10 @@ function getUserScriptCSS() {
 }
 
 :root {
+    --ujs-btn-size: 24px;
+    --ujs-btn-radius: 5px;
+    --ujs-btn-offset: 6px;
+    --ujs-dot-size: 5px;
     --ujs-shadow-1: linear-gradient(to top, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
     --ujs-shadow-2: linear-gradient(to top, rgba(0,0,0,0.25), rgba(0,0,0,0.05));
     --ujs-shadow-3: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.15));
@@ -1757,19 +1768,25 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 
 .ujs-btn-download {
   cursor: pointer;
-  top: 0.5em;
-  left: 0.5em;
+  top: var(--ujs-btn-offset);
+  left: var(--ujs-btn-offset);
+  width: var(--ujs-btn-size);
+  height: var(--ujs-btn-size);
   position: absolute;
   opacity: 0;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .ujs-btn-common {
-  width: 33px;
-  height: 33px;
-  border-radius: 0.3em;
+  width: var(--ujs-btn-size);
+  height: var(--ujs-btn-size);
+  border-radius: var(--ujs-btn-radius);
   top: 0;
+  left: 0;
   position: absolute;
-  border: 1px solid var(--ujs-gray);
-  ${settings.addBorder ? "border: 2px solid white;" : "border-color: var(--ujs-gray);"}
+  box-sizing: border-box;
+  border: 1px solid ${settings.addBorder ? "rgba(255, 255, 255, 0.95)" : "var(--ujs-gray)"};
 }
 .ujs-not-downloaded .ujs-btn-background {
   background: var(--ujs-red);
@@ -1831,16 +1848,16 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 
 .ujs-btn-download[data-is-multi-media] .ujs-dot {
     position: absolute;
-    width: 6px;
-    height: 6px;
+    width: var(--ujs-dot-size);
+    height: var(--ujs-dot-size);
     background: rgba(255, 255, 255, 0.5) linear-gradient(to right, white var(--media-progress), transparent 0%);
     border-radius: 25%;
 
-    bottom: 3px;
-    right: 3px;
+    bottom: 2px;
+    right: 2px;
 }
 .ujs-btn-download[data-is-multi-media] .ujs-dot.ujs-back {
-    bottom: 4px;
+    bottom: 3px;
     right: 1px;
 
     background: transparent;
@@ -1848,7 +1865,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
     border-right: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.ujs-btn-download[data-is-multi-media] .ujs-dot[style="--media-progress: 100%;"] + .ujs-back {
+.ujs-btn-download[data-is-multi-media].ujs-media-progress-complete .ujs-dot.ujs-back {
     border-top:   1px solid white;
     border-right: 1px solid white;
 }
@@ -1995,11 +2012,15 @@ function hoistTweet() {
     }
 
     get author() {
-      return this.url.match(/(?<=(twitter|x)\.com\/).+?(?=\/)/)?.[0];
+      try {
+        return new URL(this.url).pathname.split("/").filter(Boolean)[0];
+      } catch (err) {
+        return this.url.match(/(?:twitter|x)\.com\/([^\/]+)/)?.[1];
+      }
     }
 
     get id() {
-      return this.url.match(/(?<=\/status\/)\d+/)?.[0];
+      return this.url.match(/\/status\/(\d+)/)?.[1];
     }
   }
 
@@ -2036,8 +2057,11 @@ function hoistAPI() {
       }
 
       const authorizationKey = text.match(
-        /(?<=")AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D.+?(?=")/,
-      )[0];
+        /"(AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D.+?)"/,
+      )?.[1];
+      if (!authorizationKey) {
+        throw new Error("Authorization key not found");
+      }
       const authorization = `Bearer ${authorizationKey}`;
 
       return authorization;
@@ -2857,7 +2881,7 @@ function getUtils({ verbose }) {
   }
 
   function extensionFromMime(mimeType) {
-    let extension = mimeType.match(/(?<=\/).+/)[0];
+    let extension = mimeType.split("/")[1] || "";
     extension = extension === "jpeg" ? "jpg" : extension;
     return extension;
   }
@@ -2868,7 +2892,10 @@ function getUtils({ verbose }) {
     anchor.setAttribute("download", name || "");
     const blobUrl = URL.createObjectURL(blob);
     anchor.href = blobUrl + (url ? "#" + url : "");
+    anchor.style.display = "none";
+    document.body.append(anchor);
     anchor.click();
+    anchor.remove();
     setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
   }
 
@@ -2943,14 +2970,19 @@ function getUtils({ verbose }) {
   function addCSS(css) {
     const styleElem = document.createElement("style");
     styleElem.textContent = css;
-    document.body.append(styleElem);
+    const styleRoot = document.head || document.body || document.documentElement;
+    styleRoot.append(styleElem);
     return styleElem;
   }
 
   function getCookie(name) {
     verbose && console.log("[ujs][getCookie]", document.cookie);
-    const regExp = new RegExp(`(?<=${name}=)[^;]+`);
-    return document.cookie.match(regExp)?.[0];
+    const prefix = name + "=";
+    const cookie = document.cookie
+      .split(";")
+      .map((item) => item.trim())
+      .find((item) => item.startsWith(prefix));
+    return cookie?.slice(prefix.length);
   }
 
   function throttle(runnable, time = 50) {
@@ -3079,9 +3111,12 @@ function getUtils({ verbose }) {
   async function responseProgressProxy(response, onProgress) {
     const onProgressProps = getOnProgressProps(response);
     let loaded = 0;
+    if (!response.body || typeof response.body.getReader !== "function") {
+      return response;
+    }
     const reader = response.body.getReader();
 
-    if (isFirefox) {
+    if (isFirefox || isSafari || typeof ReadableStream !== "function") {
       const chunks = [];
       while (true) {
         const { done, /** @type {Uint8Array} */ value } = await reader.read();
@@ -3186,12 +3221,19 @@ function getUtils({ verbose }) {
   // Sometimes it's `false` for unknown reason in FF.
   const isFirefoxUserscriptContext =
     typeof wrappedJSObject === "object" && wrappedJSObject !== null;
-  const isFirefox = navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isFirefox = userAgent.indexOf("firefox") !== -1;
+  const isSafari =
+    userAgent.indexOf("safari") !== -1 &&
+    userAgent.indexOf("chrome") === -1 &&
+    userAgent.indexOf("crios") === -1 &&
+    userAgent.indexOf("fxios") === -1 &&
+    userAgent.indexOf("edg") === -1 &&
+    userAgent.indexOf("opr") === -1;
   verbose &&
     console.log("[ujs] isFirefoxUserscriptContext", isFirefoxUserscriptContext);
 
   function getBrowserName() {
-    const userAgent = window.navigator.userAgent.toLowerCase();
     return userAgent.indexOf("edge") > -1
       ? "edge-legacy"
       : userAgent.indexOf("edg") > -1
