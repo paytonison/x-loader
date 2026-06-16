@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     v1.0.1
+// @version     v1.1.0
 // @namespace   gh.paytonison
 // @description Userscript that adds compact media download buttons for images, videos, GIFs, and banners on X/Twitter.
 // @match       https://twitter.com/*
@@ -9,6 +9,13 @@
 // @supportURL  https://github.com/paytonison/x-loader/issues
 // @license     GPL-3.0
 // @grant       GM.registerMenuCommand
+// @grant       GM.download
+// @grant       GM_download
+// @connect     pbs.twimg.com
+// @connect     video.twimg.com
+// @connect     abs.twimg.com
+// @connect     twitter.com
+// @connect     x.com
 // @downloadURL https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
 // @updateURL   https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
 // ==/UserScript==
@@ -31,6 +38,7 @@ const { verbose, debugPopup } = getDebugSettings(); // --- For debug --- //
 const {
   sleep,
   fetchResource,
+  downloadFile,
   downloadBlob,
   addCSS,
   getCookie,
@@ -414,9 +422,12 @@ function showSettings() {
     "body > .ujs-modal-wrapper .ujs-reload-merge-button",
   );
 
-  exportButton.addEventListener("click", (event) => {
+  exportButton.addEventListener("click", async (event) => {
     const button = event.currentTarget;
-    historyHelper.exportHistory(() => onDone(button));
+    await historyHelper.exportHistory(
+      () => onDone(button),
+      (err) => onError(button, err),
+    );
   });
   sleep(50).then(() => {
     const infoObj = getStoreInfo();
@@ -534,6 +545,7 @@ function hoistFeatures() {
         console.error(err);
       }
       const btnErrorTextElem = btn.querySelector(".ujs-btn-error-text");
+      Btn.finishDownloading(btn);
       btn.classList.add("ujs-error");
       btnErrorTextElem.textContent = "";
       btnErrorTextElem.style = errorStyle;
@@ -578,6 +590,9 @@ function hoistFeatures() {
       // on the button click, let's start do things
       btn.classList.add("ujs-downloading");
     }
+    static finishDownloading(btn) {
+      btn.classList.remove("ujs-downloading");
+    }
     static connectionWaiting(btn) {
       // the resource request was sent, waiting for the response
       btn.title = "Downloading... (waiting for connection)";
@@ -600,14 +615,21 @@ function hoistFeatures() {
     static getOnProgress(btn) {
       const btnProgress = btn.querySelector(".ujs-progress");
       const onProgress = ({ loaded, total }) => {
-        btnProgress.style.cssText =
-          "--progress: " + (loaded / total) * 90 + "%"; // [note] total can be `0`
-        btnProgress.dataset.downloaded = loaded;
-        btnProgress.dataset.total = total;
-        if (!total) {
-          btn.title = `Downloading: ${formatSizeWinLike(loaded)}`;
+        const loadedNumber = Number(loaded) || 0;
+        const totalNumber = Number(total) || 0;
+        const progress =
+          totalNumber > 0
+            ? Math.min(90, (loadedNumber / totalNumber) * 90)
+            : loadedNumber > 0
+              ? 12
+              : 6;
+        btnProgress.style.cssText = "--progress: " + progress + "%";
+        btnProgress.dataset.downloaded = loadedNumber;
+        btnProgress.dataset.total = totalNumber;
+        if (totalNumber <= 0) {
+          btn.title = `Downloading: ${formatSizeWinLike(loadedNumber)}`;
         } else {
-          btn.title = `Downloading: ${formatSizeWinLike(loaded)} / ${formatSizeWinLike(total)}`;
+          btn.title = `Downloading: ${formatSizeWinLike(loadedNumber)} / ${formatSizeWinLike(totalNumber)}`;
         }
       };
       return onProgress;
@@ -631,7 +653,8 @@ function hoistFeatures() {
     }
     static setMediaProgress(btn, downloaded, total) {
       const mediaProgress = btn.querySelector(".ujs-media-progress");
-      const progress = Math.min(100, (downloaded / total) * 100 + 10);
+      const progress =
+        total > 0 ? Math.min(100, (downloaded / total) * 100 + 10) : 0;
       mediaProgress.style.cssText =
         "--media-progress: " + progress + "%";
       btn.classList.toggle("ujs-media-progress-complete", progress >= 100);
@@ -755,18 +778,18 @@ function hoistFeatures() {
     const listItemEl = img.closest(`li[role="listitem"]`); // The image on "/media" page
     return Boolean(listItemEl);
   }
+  const AGE_RESTRICTED_PLACEHOLDER_IMAGE_URL =
+    "https://pbs.twimg.com/media/GxJIrSUagAAK-ZP?format=jpg&name=240x240";
+
   /** @param {HTMLImageElement} img */
   async function skipImage(img) {
-    // Age-restricted adult content.
-    if (
-      img.src ===
-      "https://pbs.twimg.com/media/GxJIrSUagAAK-ZP?format=jpg&name=240x240"
-    ) {
+    // X serves this placeholder instead of user media for some age-restricted posts.
+    if (img.src === AGE_RESTRICTED_PLACEHOLDER_IMAGE_URL) {
       return true;
     }
     if (img.width === 0) {
-      const imgOnload = new Promise(async (resolve) => {
-        img.onload = resolve;
+      const imgOnload = new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once: true });
       });
       await Promise.any([imgOnload, sleep(500)]);
       await sleep(10); // to get updated img.width
@@ -974,22 +997,26 @@ function hoistFeatures() {
       let url = btn.dataset.url;
 
       const isBanner = url.includes("/profile_banners/");
-      if (isBanner) {
-        return Core._downloadBanner(url, btn);
-      }
-
-      const { id, author } = Tweet.of(btn);
-      verbose && console.log("[ujs][_imageClickHandler]", { id, author });
-
       try {
+        if (isBanner) {
+          await Core._downloadBanner(url, btn);
+          return;
+        }
+
+        const { id, author } = Tweet.of(btn);
+        verbose && console.log("[ujs][_imageClickHandler]", { id, author });
         await Core._downloadPhotoMediaEntry(id, author, url, btn);
       } catch (err) {
-        throw Btn.error({ btn, err, text: "Failed to download the image." });
+        const text = isBanner
+          ? "Failed to download the profile banner."
+          : "Failed to download the image.";
+        throw Btn.error({ btn, err, text });
       }
     }
 
     static async _downloadBanner(url, btn) {
       // Banner/Background // todo: catch the error // add progress
+      Btn.clearState(btn);
       Btn.startDownloading(btn);
 
       const { blob, lastModifiedDate, extension, name } =
@@ -1010,7 +1037,7 @@ function hoistFeatures() {
         seconds,
         extension,
       }).value;
-      downloadBlob(blob, filename, url);
+      await downloadBlob(blob, filename, url);
 
       Btn.markAsDownloaded(btn);
     }
@@ -1059,9 +1086,9 @@ function hoistFeatures() {
           const newUrl = handleImgUrl(urlStr);
           currentUrl = newUrl;
           try {
-            const result = await fetchResource(newUrl, onProgress);
-            if (result.status === 404) {
-              // todo: handle any 400 and 500 errors
+            return await fetchResource(newUrl, onProgress);
+          } catch (err) {
+            if (err.status === 404) {
               const urlObj = new URL(newUrl);
               const params = urlObj.searchParams;
               if (
@@ -1070,15 +1097,16 @@ function hoistFeatures() {
               ) {
                 params.set("format", "png");
                 const newPngUrl = urlObj.toString();
-                const result = await fetchResource(newPngUrl, onProgress);
-                if (result.status === 404) {
-                  throw new Error("404");
+                try {
+                  currentUrl = newPngUrl;
+                  return await fetchResource(newPngUrl, onProgress);
+                } catch (pngErr) {
+                  if (pngErr.status !== 404) {
+                    throw pngErr;
+                  }
                 }
-                return result;
               }
             }
-            return result;
-          } catch (err) {
             if (!originals.length) {
               Btn.warning({ btn, text: "Original images are not available." });
             }
@@ -1108,7 +1136,7 @@ function hoistFeatures() {
         extension,
         sampleText,
       }).value;
-      downloadBlob(blob, filename, currentUrl);
+      await downloadBlob(blob, filename, currentUrl);
 
       const downloaded = Btn.isDownloaded(btn);
       if (!downloaded && !isSample) {
@@ -1149,30 +1177,45 @@ function hoistFeatures() {
           text: "API.getTweetMedias failed.{ffHint}",
         });
       }
+      if (!medias.length) {
+        throw Btn.error({
+          btn,
+          err: new Error("API.getTweetMedias returned no media for tweet " + id),
+          text: "No downloadable media found.",
+        });
+      }
 
       Btn.resetMediaProgress(btn);
       const total = medias.length;
       let downloaded = 0;
 
-      for (const mediaEntry of medias) {
-        Btn.markAsNotDownloaded(btn);
+      try {
+        for (const mediaEntry of medias) {
+          Btn.markAsNotDownloaded(btn);
 
-        if (mediaEntry.type === "video") {
-          await Core._downloadVideoMediaEntry(mediaEntry, btn, id); // todo: catch the error
-        } else {
-          // "photo"
-          const {
-            screen_name: author,
-            download_url: url,
-            tweet_id: id,
-          } = mediaEntry;
-          await Core._downloadPhotoMediaEntry(id, author, url, btn);
+          if (mediaEntry.type === "video") {
+            await Core._downloadVideoMediaEntry(mediaEntry, btn, id);
+          } else {
+            // "photo"
+            const {
+              screen_name: author,
+              download_url: url,
+              tweet_id: id,
+            } = mediaEntry;
+            await Core._downloadPhotoMediaEntry(id, author, url, btn);
+          }
+
+          downloaded++;
+          Btn.setMediaProgress(btn, downloaded, total);
+
+          await sleep(50);
         }
-
-        downloaded++;
-        Btn.setMediaProgress(btn, downloaded, total);
-
-        await sleep(50);
+      } catch (err) {
+        throw Btn.error({
+          btn,
+          err,
+          text: "Failed to download one of the media entries.",
+        });
       }
       Btn.markAsDownloaded(btn);
     }
@@ -1252,7 +1295,7 @@ function hoistFeatures() {
         name,
         extension,
       }).value;
-      downloadBlob(blob, filename, url);
+      await downloadBlob(blob, filename, url);
 
       const downloaded = Btn.isDownloaded(btn);
       if (!downloaded) {
@@ -2036,6 +2079,22 @@ function hoistAPI() {
     // Guest/Suspended account Bearer token
     static guestAuthorization =
       "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA";
+    // todo: keep query IDs updated
+    // https://github.com/fa0311/TwitterInternalAPIDocument/blob/master/docs/json/API.json
+    static QueryConfig = {
+      TweetDetail: {
+        queryId: "_8aYOgEDz35BrBcBal1-_w",
+        operationName: "TweetDetail",
+      },
+      UserByScreenName: {
+        queryId: "1VOOyvKkiI3FMmkeDNxM9A",
+        operationName: "UserByScreenName",
+      },
+      TweetResultByRestId: {
+        queryId: "zAz9764BcLZOJ0JU2wrd1A",
+        operationName: "TweetResultByRestId",
+      },
+    };
 
     // Seems to be outdated at 2022.05
     static async _requestBearerToken() {
@@ -2082,8 +2141,30 @@ function hoistAPI() {
       }
     }
 
+    static getOperationNameFromUrl(url) {
+      try {
+        return new URL(url).pathname.split("/").pop() || "Twitter API";
+      } catch (err) {
+        return "Twitter API";
+      }
+    }
+
+    static getApiErrorMessage(operationName, json) {
+      const errors = Array.isArray(json?.errors) ? json.errors : [];
+      if (!errors.length) {
+        return "";
+      }
+      return errors
+        .map((err) => {
+          const code = err.code === undefined ? "" : ` [${err.code}]`;
+          return `${err.message || "Unknown error"}${code}`;
+        })
+        .join("; ");
+    }
+
     static async apiRequest(url) {
       const _url = url.toString();
+      const operationName = API.getOperationNameFromUrl(_url);
       verbose && console.log("[ujs][apiRequest]", _url);
 
       if (API.requestCache.has(_url)) {
@@ -2121,13 +2202,27 @@ function hoistAPI() {
       let json;
       try {
         const response = await fetch(_url, { headers });
-        json = await response.json();
-        if (response.ok) {
-          verbose &&
-            console.log("[ujs][apiRequest]", "Cache API request", _url);
-          API.vacuumCache();
-          API.requestCache.set(_url, json);
+        try {
+          json = await response.json();
+        } catch (err) {
+          throw new Error(
+            `${operationName} API returned non-JSON response: ${response.status} ${response.statusText}`,
+          );
         }
+        const apiErrorMessage = API.getApiErrorMessage(operationName, json);
+        if (!response.ok || apiErrorMessage) {
+          const statusText = response.statusText
+            ? " " + response.statusText
+            : "";
+          const details = apiErrorMessage ? `: ${apiErrorMessage}` : "";
+          throw new Error(
+            `${operationName} API request failed: ${response.status}${statusText}${details}`,
+          );
+        }
+        verbose &&
+          console.log("[ujs][apiRequest]", "Cache API request", _url);
+        API.vacuumCache();
+        API.requestCache.set(_url, json);
       } catch (err) {
         /* verbose && */ console.error("[ujs][apiRequest]", _url);
         /* verbose && */ console.error("[ujs][apiRequest]", err);
@@ -2139,6 +2234,52 @@ function hoistAPI() {
       // 429 - [{code: 88, message: "Rate limit exceeded"}] — for suspended accounts
 
       return json;
+    }
+
+    static responseShapeError(operationName, path) {
+      return new Error(
+        `${operationName} response shape changed: missing ${path}`,
+      );
+    }
+
+    static requireShape(value, operationName, path) {
+      if (value === undefined || value === null) {
+        throw API.responseShapeError(operationName, path);
+      }
+      return value;
+    }
+
+    static requireArray(value, operationName, path) {
+      API.requireShape(value, operationName, path);
+      if (!Array.isArray(value)) {
+        throw API.responseShapeError(operationName, path);
+      }
+      return value;
+    }
+
+    static unwrapTweetResult(tweetResult, operationName, path) {
+      const result = API.requireShape(tweetResult, operationName, path);
+      if (typeof result !== "object") {
+        throw API.responseShapeError(operationName, path);
+      }
+      if ("tweet" in result) {
+        return API.requireShape(result.tweet, operationName, `${path}.tweet`);
+      }
+      return result;
+    }
+
+    static parseTweetResultParts(tweetResult, operationName, path) {
+      const tweetLegacy = API.requireShape(
+        tweetResult.legacy,
+        operationName,
+        `${path}.legacy`,
+      );
+      const tweetUser = API.requireShape(
+        tweetResult.core?.user_results?.result,
+        operationName,
+        `${path}.core.user_results.result`,
+      );
+      return { tweetResult, tweetLegacy, tweetUser };
     }
 
     /** return {tweetResult, tweetLegacy, tweetUser} */
@@ -2179,13 +2320,17 @@ function hoistAPI() {
 
     /** return {tweetResult, tweetLegacy, tweetUser} */
     static parseTweetJsonFrom_TweetResultByRestId(json, tweetId) {
-      let tweetResult = json.data.tweetResult.result; // {"__typename": "Tweet"} // or {"__typename": "TweetWithVisibilityResults", tweet: {...}} (1641596499351212033)
-      if ("tweet" in tweetResult) {
-        tweetResult = tweetResult.tweet;
-      }
-      const tweetUser = tweetResult.core.user_results.result; // {"__typename": "User"}
-      const tweetLegacy = tweetResult.legacy;
-      return { tweetResult, tweetLegacy, tweetUser };
+      const operationName = API.QueryConfig.TweetResultByRestId.operationName;
+      const tweetResult = API.unwrapTweetResult(
+        json?.data?.tweetResult?.result,
+        operationName,
+        "data.tweetResult.result",
+      );
+      return API.parseTweetResultParts(
+        tweetResult,
+        operationName,
+        "data.tweetResult.result",
+      );
     }
 
     /**
@@ -2207,37 +2352,63 @@ function hoistAPI() {
      * @property {string} tweet_text - "Tracer providing some In-flight entertainment"
      */
     /** @returns {TweetMediaEntry[]} */
-    static parseTweetLegacyMedias(tweetResult, tweetLegacy, tweetUser) {
+    static parseTweetLegacyMedias(
+      tweetResult,
+      tweetLegacy,
+      tweetUser,
+      operationName = API.QueryConfig.TweetResultByRestId.operationName,
+    ) {
       let sourceMedias = [];
+      let sourceMediaPath = "tweetLegacy.extended_entities.media";
 
-      if (
-        tweetLegacy.extended_entities &&
-        tweetLegacy.extended_entities.media
-      ) {
-        sourceMedias = tweetLegacy.extended_entities.media;
-      } else if ("card" in tweetResult) {
-        try {
-          const unified_card = tweetResult.card.legacy.binding_values.find(
-            (bv) => bv.key === "unified_card",
-          );
-          verbose &&
-            console.log(
-              "[ujs][getTweetMedias] unified_card",
-              unified_card,
-              unified_card.value.string_value,
-            );
-          const value = JSON.parse(unified_card.value.string_value);
-          verbose &&
-            console.log("[ujs][getTweetMedias] unified_card value", value);
-          sourceMedias = Object.values(value.media_entities);
-        } catch (e) {
-          verbose &&
-            console.log(
-              "[ujs][getTweetMedias] failed to parse unified_card",
-              e,
-            );
+      if (tweetLegacy.extended_entities !== undefined) {
+        sourceMedias = API.requireArray(
+          tweetLegacy.extended_entities?.media,
+          operationName,
+          "tweetLegacy.extended_entities.media",
+        );
+      } else if (tweetResult.card !== undefined) {
+        const bindingValues = API.requireArray(
+          tweetResult.card?.legacy?.binding_values,
+          operationName,
+          "tweetResult.card.legacy.binding_values",
+        );
+        const unified_card = bindingValues.find(
+          (bv) => bv.key === "unified_card",
+        );
+        if (!unified_card) {
           return [];
         }
+        const stringValue = API.requireShape(
+          unified_card.value?.string_value,
+          operationName,
+          "tweetResult.card.legacy.binding_values.unified_card.value.string_value",
+        );
+        verbose &&
+          console.log(
+            "[ujs][getTweetMedias] unified_card",
+            unified_card,
+            stringValue,
+          );
+        let value;
+        try {
+          value = JSON.parse(stringValue);
+        } catch (err) {
+          throw new Error(
+            `${operationName} response shape changed: invalid tweetResult.card.legacy.binding_values unified_card JSON`,
+          );
+        }
+        verbose &&
+          console.log("[ujs][getTweetMedias] unified_card value", value);
+        sourceMedias = Object.values(
+          API.requireShape(
+            value.media_entities,
+            operationName,
+            "tweetResult.card.legacy.binding_values.unified_card.media_entities",
+          ),
+        );
+        sourceMediaPath =
+          "tweetResult.card.legacy.binding_values.unified_card.media_entities";
       } else {
         return [];
       }
@@ -2248,8 +2419,14 @@ function hoistAPI() {
 
       for (const media of sourceMedias) {
         index++;
-        let type = media.type;
-        const type_original = media.type;
+        const mediaPath = `${sourceMediaPath}[${index}]`;
+        API.requireShape(media, operationName, mediaPath);
+        let type = API.requireShape(
+          media.type,
+          operationName,
+          `${mediaPath}.type`,
+        );
+        const type_original = type;
         typeIndex[type] =
           (typeIndex[type] === undefined ? -1 : typeIndex[type]) + 1;
         if (type === "animated_gif") {
@@ -2260,36 +2437,73 @@ function hoistAPI() {
 
         let download_url;
         if (media.video_info) {
-          const videoInfo = media.video_info.variants
-            .filter((el) => el.bitrate !== undefined) // if content_type: "application/x-mpegURL" // .m3u8
-            .reduce((acc, cur) => (cur.bitrate > acc.bitrate ? cur : acc));
-          download_url = videoInfo.url;
+          const variants = API.requireArray(
+            media.video_info.variants,
+            operationName,
+            "media.video_info.variants",
+          );
+          const mp4Variants = variants.filter((el) => el.bitrate !== undefined); // if content_type: "application/x-mpegURL" // .m3u8
+          if (!mp4Variants.length) {
+            throw API.responseShapeError(
+              operationName,
+              "media.video_info.variants.bitrate",
+            );
+          }
+          const videoInfo = mp4Variants.reduce((acc, cur) =>
+            cur.bitrate > acc.bitrate ? cur : acc,
+          );
+          download_url = API.requireShape(
+            videoInfo.url,
+            operationName,
+            "media.video_info.variants.url",
+          );
         } else {
-          if (media.media_url_https.includes("?format=")) {
-            download_url = media.media_url_https;
+          const mediaUrl = API.requireShape(
+            media.media_url_https,
+            operationName,
+            "media.media_url_https",
+          );
+          if (mediaUrl.includes("?format=")) {
+            download_url = mediaUrl;
           } else {
             // "https://pbs.twimg.com/media/FWYvXNMXgAA7se2.jpg" -> "https://pbs.twimg.com/media/FWYvXNMXgAA7se2?format=jpg&name=orig"
-            const parts = media.media_url_https.split(".");
+            const parts = mediaUrl.split(".");
             const ext = parts[parts.length - 1];
             const urlPart = parts.slice(0, -1).join(".");
             download_url = `${urlPart}?format=${ext}&name=orig`;
           }
         }
 
-        const screen_name = tweetUser.legacy.screen_name; // "kreamu"
-        const tweet_id = tweetResult.rest_id || tweetLegacy.id_str; // "1687962620173733890"
+        const screen_name = API.requireShape(
+          tweetUser.legacy?.screen_name,
+          operationName,
+          "tweetResult.core.user_results.result.legacy.screen_name",
+        ); // "kreamu"
+        const tweet_id = API.requireShape(
+          tweetResult.rest_id || tweetLegacy.id_str,
+          operationName,
+          "tweetResult.rest_id",
+        ); // "1687962620173733890"
 
         const type_index = typeIndex[type]; // 0
         const type_index_original = typeIndex[type_original]; // 0
 
-        const preview_url = media.media_url_https; // "https://pbs.twimg.com/ext_tw_video_thumb/1687949851516862464/pu/img/mTBjwz--nylYk5Um.jpg"
+        const preview_url = API.requireShape(
+          media.media_url_https,
+          operationName,
+          "media.media_url_https",
+        ); // "https://pbs.twimg.com/ext_tw_video_thumb/1687949851516862464/pu/img/mTBjwz--nylYk5Um.jpg"
         const media_id = media.id_str; //   "1687949851516862464"
         const media_key = media.media_key; // "7_1687949851516862464"
 
         const expanded_url = media.expanded_url; // "https://twitter.com/kreamu/status/1687962620173733890/video/1"
         const short_expanded_url = media.display_url; // "pic.twitter.com/KeXR8T910R"
         const short_tweet_url = media.url; // "https://t.co/KeXR8T910R"
-        const tweet_text = tweetLegacy.full_text // "Tracer providing some In-flight entertainment https://t.co/KeXR8T910R"
+        const tweet_text = API.requireShape(
+          tweetLegacy.full_text,
+          operationName,
+          "tweetLegacy.full_text",
+        ) // "Tracer providing some In-flight entertainment https://t.co/KeXR8T910R"
           .replace(` ${media.url}`, "");
 
         // {screen_name, tweet_id, download_url, preview_url, type_index}
@@ -2342,6 +2556,7 @@ function hoistAPI() {
          */
     static async getTweetMedias(tweetId) {
       /* "old" (no more works / requires "x-client-transaction-id" header) and "new" API selection */
+      const operationName = API.QueryConfig.TweetResultByRestId.operationName;
 
       // const url = API.createTweetJsonEndpointUrl(tweetId); // old 2025.04
       const url = API.createTweetJsonEndpointUrlByRestId(tweetId);
@@ -2358,6 +2573,7 @@ function hoistAPI() {
         tweetResult,
         tweetLegacy,
         tweetUser,
+        operationName,
       );
 
       if (
@@ -2365,19 +2581,26 @@ function hoistAPI() {
         tweetResult.quoted_status_result
           .result /* check is the qouted tweet not deleted */
       ) {
-        let tweetResultQuoted = tweetResult.quoted_status_result.result;
-        if ("tweet" in tweetResultQuoted) {
-          // tweetResultQuoted.__typename === "TweetWithVisibilityResults"
-          tweetResultQuoted = tweetResultQuoted.tweet;
-        }
-        const tweetLegacyQuoted = tweetResultQuoted.legacy;
-        const tweetUserQuoted = tweetResultQuoted.core.user_results.result;
+        const tweetResultQuoted = API.unwrapTweetResult(
+          tweetResult.quoted_status_result.result,
+          operationName,
+          "data.tweetResult.result.quoted_status_result.result",
+        );
+        const {
+          tweetLegacy: tweetLegacyQuoted,
+          tweetUser: tweetUserQuoted,
+        } = API.parseTweetResultParts(
+          tweetResultQuoted,
+          operationName,
+          "data.tweetResult.result.quoted_status_result.result",
+        );
         result = [
           ...result,
           ...API.parseTweetLegacyMedias(
             tweetResultQuoted,
             tweetLegacyQuoted,
             tweetUserQuoted,
+            operationName,
           ),
         ];
       }
@@ -2391,12 +2614,6 @@ function hoistAPI() {
             console.log("features",     JSON.stringify(JSON.parse(Object.fromEntries(a.searchParams).features),     null, "    "))
             console.log("fieldToggles", JSON.stringify(JSON.parse(Object.fromEntries(a.searchParams).fieldToggles), null, "    "))
         */
-
-    // todo: keep `queryId` updated
-    // https://github.com/fa0311/TwitterInternalAPIDocument/blob/master/docs/json/API.json
-    static TweetDetailQueryId = "_8aYOgEDz35BrBcBal1-_w"; // TweetDetail      (for videos and media tab)
-    static UserByScreenNameQueryId = "1VOOyvKkiI3FMmkeDNxM9A"; // UserByScreenName (for the direct user profile url)
-    static TweetResultByRestIdQueryId = "zAz9764BcLZOJ0JU2wrd1A"; // TweetResultByRestId (an alternative for TweetDetail)
 
     // get a URL for TweetResultByRestId endpoint
     static createTweetJsonEndpointUrlByRestId(tweetId) {
@@ -2445,7 +2662,8 @@ function hoistAPI() {
         withDisallowedReplyControls: false,
       };
 
-      const urlBase = `https://${sitename}.com/i/api/graphql/${API.TweetResultByRestIdQueryId}/TweetResultByRestId`;
+      const queryConfig = API.QueryConfig.TweetResultByRestId;
+      const urlBase = `https://${sitename}.com/i/api/graphql/${queryConfig.queryId}/${queryConfig.operationName}`;
       const urlObj = new URL(urlBase);
       urlObj.searchParams.set("variables", JSON.stringify(variables));
       urlObj.searchParams.set("features", JSON.stringify(features));
@@ -2505,7 +2723,8 @@ function hoistAPI() {
         withDisallowedReplyControls: false,
       };
 
-      const urlBase = `https://${sitename}.com/i/api/graphql/${API.TweetDetailQueryId}/TweetDetail`;
+      const queryConfig = API.QueryConfig.TweetDetail;
+      const urlBase = `https://${sitename}.com/i/api/graphql/${queryConfig.queryId}/${queryConfig.operationName}`;
       const urlObj = new URL(urlBase);
       urlObj.searchParams.set("variables", JSON.stringify(variables));
       urlObj.searchParams.set("features", JSON.stringify(features));
@@ -2537,7 +2756,8 @@ function hoistAPI() {
         withAuxiliaryUserLabels: true,
       };
 
-      const urlBase = `https://${sitename}.com/i/api/graphql/${API.UserByScreenNameQueryId}/UserByScreenName?`;
+      const queryConfig = API.QueryConfig.UserByScreenName;
+      const urlBase = `https://${sitename}.com/i/api/graphql/${queryConfig.queryId}/${queryConfig.operationName}?`;
       const urlObj = new URL(urlBase);
       urlObj.searchParams.set("variables", JSON.stringify(variables));
       urlObj.searchParams.set("features", JSON.stringify(features));
@@ -2623,7 +2843,7 @@ function getHistoryHelper() {
     // localStorage.setItem(StorageNames.migrated, "true");
   }
 
-  function exportHistory(onDone) {
+  async function exportHistory(onDone, onError) {
     const exportObject = [
       StorageNames.settings,
       StorageNames.settingsImageHistoryBy,
@@ -2646,11 +2866,19 @@ function getHistoryHelper() {
       localStorage.getItem(StorageNames.browserName) || getBrowserName();
     const browserLine = browserName ? "-" + browserName : "";
 
-    downloadBlob(
-      new Blob([toLineJSON(exportObject, true)]),
-      `ujs-twitter-click-n-save-export-${formatDate(new Date(), datePattern)}${browserLine}.json`,
-    );
-    onDone();
+    try {
+      await downloadBlob(
+        new Blob([toLineJSON(exportObject, true)]),
+        `ujs-twitter-click-n-save-export-${formatDate(new Date(), datePattern)}${browserLine}.json`,
+      );
+      await onDone();
+    } catch (err) {
+      if (onError) {
+        await onError(err);
+        return;
+      }
+      throw err;
+    }
   }
 
   function verify(jsonObject) {
@@ -2836,17 +3064,78 @@ function getUtils({ verbose }) {
     return new Promise((resolve) => setTimeout(resolve, time));
   }
 
+  class ResourceFetchError extends Error {
+    constructor(message, props) {
+      super(message);
+      this.name = "ResourceFetchError";
+      Object.assign(this, props);
+    }
+  }
+
+  function getResponseInfo(response, requestUrl) {
+    const contentType = response.headers.get("content-type");
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      contentType,
+      url: response.url || requestUrl,
+      requestUrl,
+    };
+  }
+
+  function getResourceErrorMessage(prefix, responseInfo) {
+    const statusText = responseInfo.statusText
+      ? " " + responseInfo.statusText
+      : "";
+    const contentType = responseInfo.contentType
+      ? ` (${responseInfo.contentType})`
+      : "";
+    return `${prefix}: ${responseInfo.status}${statusText}${contentType} ${responseInfo.url}`;
+  }
+
+  function isExpectedMediaContentType(contentType) {
+    if (!contentType) {
+      return true;
+    }
+    const mime = contentType.split(";")[0].trim().toLowerCase();
+    return (
+      mime.startsWith("image/") ||
+      mime.startsWith("video/") ||
+      mime === "application/octet-stream"
+    );
+  }
+
   async function fetchResource(
     url,
     onProgress = (props) => console.log(props),
+    { allowHttpError = false, allowUnexpectedContentType = false } = {},
   ) {
+    const requestUrl = url.toString();
     try {
       /** @type {Response} */
-      let response = await fetch(url, {
+      let response = await fetch(requestUrl, {
         // cache: "force-cache",
       });
+      const responseInfo = getResponseInfo(response, requestUrl);
+      if (!response.ok && !allowHttpError) {
+        throw new ResourceFetchError(
+          getResourceErrorMessage("Resource fetch failed", responseInfo),
+          responseInfo,
+        );
+      }
       const lastModifiedDateSeconds = response.headers.get("last-modified");
-      const contentType = response.headers.get("content-type");
+      const contentType = responseInfo.contentType;
+      if (
+        !allowUnexpectedContentType &&
+        response.ok &&
+        !isExpectedMediaContentType(contentType)
+      ) {
+        throw new ResourceFetchError(
+          getResourceErrorMessage("Unexpected resource content type", responseInfo),
+          responseInfo,
+        );
+      }
 
       const lastModifiedDate = formatDate(lastModifiedDateSeconds, datePattern);
       const extension = contentType ? extensionFromMime(contentType) : null;
@@ -2860,7 +3149,7 @@ function getUtils({ verbose }) {
       // https://pbs.twimg.com/media/AbcdEFgijKL01_9?format=jpg&name=orig                                     -> AbcdEFgijKL01_9
       // https://pbs.twimg.com/ext_tw_video_thumb/1234567890123456789/pu/img/Ab1cd2345EFgijKL.jpg?name=orig   -> Ab1cd2345EFgijKL.jpg
       // https://video.twimg.com/ext_tw_video/1234567890123456789/pu/vid/946x720/Ab1cd2345EFgijKL.mp4?tag=10  -> Ab1cd2345EFgijKL.mp4
-      const _url = new URL(url);
+      const _url = new URL(responseInfo.url);
       const { filename } = (_url.origin + _url.pathname).match(
         /(?<filename>[^\/]+$)/,
       ).groups;
@@ -2872,32 +3161,169 @@ function getUtils({ verbose }) {
         contentType,
         extension,
         name,
-        status: response.status,
+        status: responseInfo.status,
+        statusText: responseInfo.statusText,
+        ok: responseInfo.ok,
+        url: responseInfo.url,
       };
     } catch (error) {
-      verbose && console.error("[ujs][fetchResource]", url);
+      verbose && console.error("[ujs][fetchResource]", requestUrl);
       verbose && console.error("[ujs][fetchResource]", error);
       throw error;
     }
   }
 
   function extensionFromMime(mimeType) {
-    let extension = mimeType.split("/")[1] || "";
+    const cleanMimeType = mimeType.split(";")[0].trim();
+    let extension = cleanMimeType.split("/")[1] || "";
     extension = extension === "jpeg" ? "jpg" : extension;
     return extension;
   }
 
   // the original download url will be posted as hash of the blob url, so you can check it in the download manager's history
-  function downloadBlob(blob, name, url) {
+  async function downloadBlob(blob, name, url) {
+    return downloadFile({ url, blob, filename: name, sourceUrl: url });
+  }
+
+  function getGMDownload() {
+    if (typeof GM === "object" && GM && typeof GM.download === "function") {
+      return { name: "GM.download", fn: GM.download.bind(GM) };
+    }
+    if (typeof GM_download === "function") {
+      return { name: "GM_download", fn: GM_download };
+    }
+    return null;
+  }
+
+  function toDownloadError(err, fallbackMessage) {
+    if (err instanceof Error) {
+      return err;
+    }
+    return new Error(err?.message || String(err || fallbackMessage));
+  }
+
+  async function tryGMDownload({ url, filename }) {
+    const gmDownload = getGMDownload();
+    if (!gmDownload) {
+      return false;
+    }
+
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const settle = (callback, value) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(triggerTimer);
+        callback(value);
+      };
+      const triggerTimer = setTimeout(() => settle(resolve, true), 2000);
+      const details = {
+        url,
+        name: filename || "",
+        onload: () => settle(resolve, true),
+        onerror: (err) =>
+          settle(
+            reject,
+            toDownloadError(err, `${gmDownload.name} failed to download ${url}`),
+          ),
+        ontimeout: (err) =>
+          settle(
+            reject,
+            toDownloadError(err, `${gmDownload.name} timed out downloading ${url}`),
+          ),
+      };
+
+      try {
+        const result = gmDownload.fn(details);
+        if (result && typeof result.then === "function") {
+          result.then(
+            () => settle(resolve, true),
+            (err) =>
+              settle(
+                reject,
+                toDownloadError(
+                  err,
+                  `${gmDownload.name} failed to download ${url}`,
+                ),
+              ),
+          );
+        }
+      } catch (err) {
+        clearTimeout(triggerTimer);
+        try {
+          const result = gmDownload.fn(url, filename || "");
+          if (result && typeof result.then === "function") {
+            result.then(resolve, reject);
+            return;
+          }
+          resolve(true);
+        } catch (fallbackErr) {
+          reject(toDownloadError(fallbackErr, `${gmDownload.name} failed`));
+        }
+      }
+    });
+  }
+
+  async function downloadFile({ url, blob, filename, sourceUrl } = {}) {
+    if (!url && !blob) {
+      throw new Error("downloadFile requires a url or blob");
+    }
+
+    const directUrl = url ? url.toString() : "";
+    if (directUrl) {
+      try {
+        const gmDownloadStarted = await tryGMDownload({
+          url: directUrl,
+          filename,
+        });
+        if (gmDownloadStarted) {
+          return;
+        }
+      } catch (err) {
+        verbose && console.warn("[ujs][downloadFile][GM]", err);
+      }
+    }
+
+    if (blob) {
+      const blobUrl = URL.createObjectURL(blob);
+      let revokeTimeout = setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+      const originalUrl = sourceUrl || directUrl;
+      const href = blobUrl + (originalUrl ? "#" + originalUrl : "");
+      try {
+        if (!directUrl) {
+          try {
+            const gmDownloadStarted = await tryGMDownload({ url: href, filename });
+            if (gmDownloadStarted) {
+              return;
+            }
+          } catch (err) {
+            verbose && console.warn("[ujs][downloadFile][GM blob]", err);
+          }
+        }
+        await downloadByAnchor({ href, filename });
+      } catch (err) {
+        clearTimeout(revokeTimeout);
+        revokeTimeout = null;
+        URL.revokeObjectURL(blobUrl);
+        throw err;
+      }
+      return;
+    }
+
+    await downloadByAnchor({ href: directUrl, filename });
+  }
+
+  async function downloadByAnchor({ href, filename }) {
     const anchor = document.createElement("a");
-    anchor.setAttribute("download", name || "");
-    const blobUrl = URL.createObjectURL(blob);
-    anchor.href = blobUrl + (url ? "#" + url : "");
+    anchor.setAttribute("download", filename || "");
+    anchor.href = href;
     anchor.style.display = "none";
     document.body.append(anchor);
     anchor.click();
     anchor.remove();
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+    await sleep(0);
   }
 
   /**
@@ -3088,7 +3514,7 @@ function getUtils({ verbose }) {
     const compressed = !isIdentity;
     const _contentLength = parseInt(headers.get("Content-Length")); // `get()` returns `null` if no header present
     const contentLength = isNaN(_contentLength) ? null : _contentLength;
-    const lengthComputable = isIdentity && _contentLength !== null;
+    const lengthComputable = isIdentity && contentLength !== null;
 
     // Original XHR behaviour; in TM it equals to `contentLength`, or `-1` if `contentLength` is `null` (and `0`?).
     const total = lengthComputable ? contentLength : 0;
@@ -3334,6 +3760,7 @@ function getUtils({ verbose }) {
     sleep,
     fetchResource,
     extensionFromMime,
+    downloadFile,
     downloadBlob,
     formatDate,
     addCSS,
