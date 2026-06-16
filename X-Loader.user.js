@@ -2,7 +2,7 @@
 // @name        X-Loader
 // @version     v1.0.1
 // @namespace   gh.paytonison
-// @description Add compact buttons to download images and videos from X/Twitter.
+// @description Userscript that adds compact media download buttons for images, videos, GIFs, and banners on X/Twitter.
 // @match       https://twitter.com/*
 // @match       https://x.com/*
 // @homepageURL https://github.com/paytonison/x-loader
