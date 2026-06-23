@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     v1.1.0
+// @version     v1.1.1
 // @namespace   gh.paytonison
 // @description Userscript that adds compact media download buttons for images, videos, GIFs, and banners on X/Twitter.
 // @match       https://twitter.com/*
@@ -1752,7 +1752,7 @@ function getUserScriptCSS() {
 
 :root {
     --ujs-btn-size: 24px;
-    --ujs-btn-radius: 5px;
+    --ujs-btn-radius: 9px;
     --ujs-btn-offset: 6px;
     --ujs-dot-size: 5px;
     --ujs-red:   #e0245e;
@@ -1764,10 +1764,11 @@ function getUserScriptCSS() {
 
 .ujs-progress {
   background:
-    linear-gradient(to right, rgba(76, 175, 80, 0.52) var(--progress), transparent 0%),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+    linear-gradient(to right, rgba(77, 195, 109, 0.52) var(--progress), transparent 0%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.08), transparent);
   border: 0;
-  opacity: 0.92;
+  opacity: 0.88;
 }
 
 .ujs-shadow {
@@ -1779,10 +1780,10 @@ function getUserScriptCSS() {
 .ujs-shadow::before {
   content: "";
   position: absolute;
-  inset: 1px;
+  inset: 0;
   border-radius: inherit;
   background: var(--x-loader-glass-sheen);
-  opacity: 0.5;
+  opacity: 0.56;
   pointer-events: none;
 }
 .ujs-btn-download:hover .ujs-hover {
@@ -1790,8 +1791,8 @@ function getUserScriptCSS() {
 }
 .ujs-btn-download.ujs-downloading .ujs-shadow {
   box-shadow:
-    0 6px 14px rgba(0, 0, 0, 0.34),
-    0 1px 3px rgba(0, 0, 0, 0.28),
+    0 8px 18px rgba(0, 0, 0, 0.35),
+    0 2px 5px rgba(0, 0, 0, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .ujs-btn-download:active .ujs-shadow {
@@ -1842,30 +1843,40 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   transition:
     opacity 180ms ease,
     transform 160ms ease;
-  --ujs-btn-radius: 999px;
-  --x-loader-glass-bg: rgba(17, 18, 20, 0.72);
-  --x-loader-glass-bg-fallback: rgba(20, 21, 23, 0.94);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.34)" : "rgba(194, 203, 208, 0.28)"};
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.38);
-  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.32);
+  /* 24px macOS-style squircle shared by all button paint layers. */
+  --ujs-btn-radius: 9px;
+  border-radius: var(--ujs-btn-radius);
+  --x-loader-glass-bg: rgba(16, 18, 21, 0.62);
+  --x-loader-glass-bg-fallback: rgba(18, 20, 23, 0.93);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.36)" : "rgba(210, 220, 226, 0.22)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.34);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.14);
+  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.40);
   --x-loader-glass-shadow:
-    0 7px 16px rgba(0, 0, 0, 0.30),
-    0 1px 3px rgba(0, 0, 0, 0.24);
+    0 8px 18px rgba(0, 0, 0, 0.32),
+    0 2px 5px rgba(0, 0, 0, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.08);
   --x-loader-glass-text: rgba(255, 255, 255, 0.94);
   --x-loader-glass-dot: rgba(255, 255, 255, 0.62);
   --x-loader-glass-sheen:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.12) 34%, rgba(255, 255, 255, 0) 62%);
+    radial-gradient(90% 70% at 28% 0%, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.11) 42%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 44%);
 }
 .ujs-btn-download:hover {
   transform: translateY(-1px);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.42)" : "rgba(194, 203, 208, 0.34)"};
+  --x-loader-glass-bg: rgba(19, 21, 24, 0.68);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.44)" : "rgba(210, 220, 226, 0.30)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.40);
   --x-loader-glass-shadow:
-    0 9px 18px rgba(0, 0, 0, 0.34),
-    0 2px 4px rgba(0, 0, 0, 0.26);
+    0 10px 20px rgba(0, 0, 0, 0.35),
+    0 3px 7px rgba(0, 0, 0, 0.26),
+    0 0 0 0.5px rgba(255, 255, 255, 0.10);
 }
 .ujs-btn-download:active {
   transform: translateY(0);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.25)" : "rgba(194, 203, 208, 0.22)"};
+  --x-loader-glass-bg: rgba(14, 16, 19, 0.70);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.25)" : "rgba(210, 220, 226, 0.18)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.24);
 }
 .ujs-btn-download:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.58);
@@ -1890,14 +1901,17 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 .ujs-btn-background {
   color: var(--x-loader-glass-text);
   background:
-    linear-gradient(180deg, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.16)),
-    radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(90% 70% at 28% 0%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.20)),
+    radial-gradient(115% 90% at 82% 100%, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 58%),
     var(--x-loader-glass-bg);
   border: 1px solid var(--x-loader-glass-border);
-  -webkit-backdrop-filter: blur(18px) saturate(165%);
-  backdrop-filter: blur(18px) saturate(165%);
+  background-clip: padding-box;
+  -webkit-backdrop-filter: blur(20px) saturate(175%) brightness(1.04);
+  backdrop-filter: blur(20px) saturate(175%) brightness(1.04);
   box-shadow:
     inset 0 1px 0 var(--x-loader-glass-highlight),
+    inset 0 0 0 1px var(--x-loader-glass-inner-rim),
     inset 0 -1px 1px var(--x-loader-glass-bottom-shadow);
   transition:
     background 160ms ease,
@@ -1907,8 +1921,8 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 .ujs-hover {
   background:
-    radial-gradient(90% 80% at 28% 0%, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+    radial-gradient(80% 70% at 30% 0%, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
   border: 0;
   opacity: 0;
   transition: opacity 160ms ease;
@@ -1928,28 +1942,39 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 .ujs-btn-download.ujs-already-downloaded,
 .ujs-btn-download.ujs-downloaded {
-  --x-loader-glass-bg: rgba(194, 203, 208, 0.70);
-  --x-loader-glass-bg-fallback: rgba(194, 203, 208, 0.96);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.48)" : "rgba(255, 255, 255, 0.24)"};
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.62);
+  --x-loader-glass-bg: rgba(198, 207, 213, 0.66);
+  --x-loader-glass-bg-fallback: rgba(204, 213, 218, 0.94);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.50)" : "rgba(255, 255, 255, 0.26)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.64);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.28);
   --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.18);
+  --x-loader-glass-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.24),
+    0 1px 3px rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.12);
   --x-loader-glass-text: rgba(13, 16, 18, 0.9);
   --x-loader-glass-dot: rgba(13, 16, 18, 0.38);
 }
 .ujs-btn-download.ujs-error {
-  --x-loader-glass-bg: rgba(255, 255, 255, 0.78);
+  --x-loader-glass-bg: rgba(255, 255, 255, 0.82);
   --x-loader-glass-bg-fallback: rgba(255, 255, 255, 0.96);
-  --x-loader-glass-border: rgba(255, 255, 255, 0.56);
+  --x-loader-glass-border: rgba(255, 69, 58, 0.42);
   --x-loader-glass-highlight: rgba(255, 255, 255, 0.72);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.34);
   --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.16);
+  --x-loader-glass-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.26),
+    0 2px 5px rgba(0, 0, 0, 0.20),
+    0 0 0 1px rgba(255, 69, 58, 0.14);
   --x-loader-glass-text: rgba(0, 0, 0, 0.9);
   --x-loader-glass-dot: rgba(0, 0, 0, 0.34);
 }
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .ujs-btn-download .ujs-btn-background {
     background:
-      linear-gradient(180deg, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.16)),
-      radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 58%),
+      radial-gradient(90% 70% at 28% 0%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 62%),
+      linear-gradient(180deg, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0.20)),
+      radial-gradient(115% 90% at 82% 100%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 58%),
       var(--x-loader-glass-bg-fallback);
   }
 }
