@@ -1,7 +1,7 @@
 # X-Loader
 
-X-Loader is a userscript for X/Twitter that adds compact download controls to
-media on `x.com` and `twitter.com`.
+X-Loader is a userscript for X/Twitter that adds proportional overlay download
+controls to media on `x.com` and `twitter.com`.
 
 It is focused on saving images, videos, animated GIFs, multi-media posts, and
 profile banners directly from the page. The script also includes a small set of
@@ -12,14 +12,16 @@ some noisy page sections.
 ## What it does
 
 X-Loader watches the X/Twitter page for media as the timeline changes. When it
-finds supported media, it adds a small overlay download button near the top-left
-of the media area.
+finds supported media, it adds a glass overlay download button near the
+top-left of the media area.
 
-The button is intentionally compact:
+The button is sized to stay visible against the media viewer without covering
+the media:
 
-- red means the item has not been downloaded yet
+- neutral glass means the item has not been downloaded yet
 - blue means the item is already in local download history
 - green means the item was downloaded during the current session
+- red is reserved for download errors and warnings
 - progress is shown on the button while a download is running
 - multi-media posts show a small progress marker for batch downloads
 
@@ -142,10 +144,13 @@ The script grants only:
 
 ```text
 GM.registerMenuCommand
+GM_registerMenuCommand
+GM.download
+GM_download
 ```
 
-Media downloads are performed through page `fetch`, blob URLs, and browser
-downloads.
+Media downloads use userscript-manager download APIs where available, with
+page `fetch`, blob URLs, and browser downloads as the fallback path.
 
 ## Installation
 
@@ -156,6 +161,7 @@ https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
 ```
 
 The metadata block also points `@downloadURL` and `@updateURL` at that file.
+The current userscript metadata version is `1.2.0`.
 
 ## Development
 

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     1.27.1-2025.11.15
+// @version     1.2.0
 // @namespace   gh.paytonison
 // @description Safari-optimized media downloader for images, videos, GIFs, and banners on X/Twitter.
 // @match       https://twitter.com/*
@@ -491,9 +491,9 @@ function getLocalStorages() {
 // --- Twitter.Features --- //
 function hoistFeatures() {
     // ❌ image
-    const errorStyle   = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/274c.svg"); background-size: 11px 11px; background-position: center; background-repeat: no-repeat;`;
+    const errorStyle   = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/274c.svg"); background-size: 15px 15px; background-position: center; background-repeat: no-repeat;`;
     // ⚠  image
-    const warningStyle = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/26a0.svg"); background-size: 11px 11px; background-position: center; background-repeat: no-repeat;`;
+    const warningStyle = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/26a0.svg"); background-size: 15px 15px; background-position: center; background-repeat: no-repeat;`;
 
     class Btn {
         /**
@@ -1527,14 +1527,14 @@ function getUserScriptCSS() {
 }
 
 :root {
-    --ujs-btn-size: 17px;
-    --ujs-btn-hit-size: 28px;
-    --ujs-btn-radius: 6px;
-    --ujs-btn-offset: 2px;
-    --ujs-dot-size: 3.5px;
-    --ujs-dot-offset: 2px;
-    --ujs-dot-back-offset-x: 1px;
-    --ujs-dot-back-offset-y: 3px;
+    --ujs-btn-size: 24px;
+    --ujs-btn-hit-size: 36px;
+    --ujs-btn-radius: 8px;
+    --ujs-btn-offset: 4px;
+    --ujs-dot-size: 5px;
+    --ujs-dot-offset: 3px;
+    --ujs-dot-back-offset-x: 1.5px;
+    --ujs-dot-back-offset-y: 4px;
     --ujs-red:   rgb(255, 69, 58);
     --ujs-blue:  rgb(10, 132, 255);
     --ujs-green: rgb(48, 209, 88);
@@ -1635,8 +1635,8 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   border-radius: calc(var(--ujs-btn-radius) + 5px);
   isolation: isolate;
   transition: opacity 180ms ease;
-  --x-loader-state-tint: rgba(255, 69, 58, 0.22);
-  --x-loader-state-edge: rgba(255, 69, 58, 0.38);
+  --x-loader-state-tint: rgba(255, 255, 255, 0.08);
+  --x-loader-state-edge: rgba(255, 255, 255, 0.18);
   --x-loader-glass-bg: rgba(14, 16, 19, 0.38);
   --x-loader-glass-bg-fallback: rgba(18, 20, 23, 0.84);
   --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.58)" : "rgba(235, 242, 247, 0.30)"};
@@ -1817,7 +1817,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   align-items: center;
   justify-content: center;
   color: var(--x-loader-glass-text);
-  font-size: 8px;
+  font-size: 10px;
 }
 .ujs-modal-settings fieldset {
     border: 1px solid grey;
