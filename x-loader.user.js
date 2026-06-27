@@ -1574,16 +1574,16 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   height: var(--ujs-btn-size);
   border-radius: var(--ujs-btn-radius);
   isolation: isolate;
-  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.34));
+  filter: blur(0.22px);
   transform: translateZ(0);
   transition: opacity 160ms ease-out, filter 160ms ease-out, transform 160ms ease-out;
 }
 .ujs-btn-download:hover {
-  filter: drop-shadow(0 13px 22px rgba(0,0,0,0.42));
+  filter: blur(0.34px);
   transform: translateY(-1px);
 }
 .ujs-btn-download:active {
-  filter: drop-shadow(0 7px 12px rgba(0,0,0,0.34));
+  filter: blur(0.16px);
   transform: translateY(0) scale(0.97);
 }
 .ujs-btn-download::before,
