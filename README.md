@@ -161,7 +161,7 @@ https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
 ```
 
 The metadata block also points `@downloadURL` and `@updateURL` at that file.
-The current userscript metadata version is `1.2.0`.
+The current userscript metadata version is `1.2.1`.
 
 ## Development
 

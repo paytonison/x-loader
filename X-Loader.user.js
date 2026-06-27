@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     1.2.0
+// @version     1.2.1
 // @namespace   gh.paytonison
 // @description Safari-optimized media downloader for images, videos, GIFs, and banners on X/Twitter.
 // @match       https://twitter.com/*
@@ -1527,14 +1527,14 @@ function getUserScriptCSS() {
 }
 
 :root {
-    --ujs-btn-size: 24px;
-    --ujs-btn-hit-size: 36px;
-    --ujs-btn-radius: 8px;
+    --ujs-btn-size: 44px;
+    --ujs-btn-hit-size: 58px;
+    --ujs-btn-radius: 14px;
     --ujs-btn-offset: 4px;
-    --ujs-dot-size: 5px;
-    --ujs-dot-offset: 3px;
-    --ujs-dot-back-offset-x: 1.5px;
-    --ujs-dot-back-offset-y: 4px;
+    --ujs-dot-size: 10px;
+    --ujs-dot-offset: 6px;
+    --ujs-dot-back-offset-x: 3px;
+    --ujs-dot-back-offset-y: 8px;
     --ujs-red:   rgb(255, 69, 58);
     --ujs-blue:  rgb(10, 132, 255);
     --ujs-green: rgb(48, 209, 88);
@@ -1543,24 +1543,24 @@ function getUserScriptCSS() {
 
 .ujs-progress {
   background:
-    linear-gradient(to right, rgba(48, 209, 88, 0.72) var(--progress), transparent 0%),
-    radial-gradient(110% 70% at 24% 0%, rgba(255, 255, 255, 0.42), transparent 62%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.02) 48%, rgba(0, 0, 0, 0.14));
-  border: 1px solid rgba(255, 255, 255, 0.20);
+    linear-gradient(to right, rgba(255, 255, 255, 0.26) var(--progress), transparent 0%),
+    radial-gradient(115% 84% at 20% -12%, rgba(255, 255, 255, 0.36), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 52%, rgba(0, 0, 0, 0.07));
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.08);
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity 160ms ease;
+  transition: opacity 70ms linear;
 }
 
 .ujs-shadow {
   background: transparent;
   border: 0;
   box-shadow: var(--x-loader-glass-shadow);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.30));
-  transition: box-shadow 160ms ease;
+  filter: drop-shadow(0 2px 3.5px rgba(0, 0, 0, 0.08));
+  transition: box-shadow 80ms ease;
 }
 .ujs-shadow::before {
   content: "";
@@ -1568,31 +1568,33 @@ function getUserScriptCSS() {
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(120% 90% at 8% 0%, rgba(255, 255, 255, 0.36), transparent 44%),
-    radial-gradient(95% 95% at 92% 100%, rgba(255, 255, 255, 0.14), transparent 60%),
+    radial-gradient(125% 86% at 10% -8%, rgba(255, 255, 255, 0.44), transparent 42%),
+    radial-gradient(96% 94% at 94% 108%, rgba(255, 255, 255, 0.16), transparent 60%),
     var(--x-loader-glass-sheen);
-  box-shadow: inset 0 0 0 0.5px var(--x-loader-glass-edge);
-  opacity: 0.66;
+  box-shadow:
+    inset 0 0 0 0.5px var(--x-loader-glass-edge),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.18);
+  opacity: 0.54;
   pointer-events: none;
 }
 .ujs-btn-download:hover .ujs-hover {
-  opacity: 1;
+  opacity: 0.32;
 }
 .ujs-btn-download.ujs-downloading .ujs-shadow {
   box-shadow:
-    0 8px 18px rgba(0, 0, 0, 0.34),
-    0 2px 5px rgba(0, 0, 0, 0.26),
+    0 3px 7px rgba(0, 0, 0, 0.12),
+    0 0.5px 1.5px rgba(0, 0, 0, 0.10),
     0 0 0 0.5px rgba(255, 255, 255, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 .ujs-btn-download.ujs-downloading .ujs-progress {
-  opacity: 0.84;
+  opacity: 0.46;
 }
 .ujs-btn-download:active .ujs-shadow {
   box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.34),
-    0 1px 2px rgba(0, 0, 0, 0.24),
-    inset 0 1px 1px rgba(255, 255, 255, 0.12);
+    0 1px 2.5px rgba(0, 0, 0, 0.13),
+    0 0.5px 0.5px rgba(0, 0, 0, 0.11),
+    inset 0 1px 1px rgba(255, 255, 255, 0.10);
 }
 
 .ujs-btn-download.ujs-downloaded.ujs-recently-downloaded {
@@ -1600,25 +1602,25 @@ function getUserScriptCSS() {
 }
 
 li[role="listitem"]:hover .ujs-btn-download {
-    opacity: 1;
+    opacity: 0.75;
 }
 article[role=article]:hover .ujs-btn-download {
-    opacity: 1;
+    opacity: 0.75;
 }
 div[aria-label="${labelText}"]:hover .ujs-btn-download {
-    opacity: 1;
+    opacity: 0.75;
 }
 .ujs-btn-download.ujs-downloaded {
-    opacity: 1;
+    opacity: 0.75;
 }
 .ujs-btn-download.ujs-downloading {
-    opacity: 1;
+    opacity: 0.75;
 }
 [data-testid="videoComponent"]:hover + .ujs-btn-download {
-    opacity: 1;
+    opacity: 0.75;
 }
 [data-testid="videoComponent"] + .ujs-btn-download:hover {
-    opacity: 1;
+    opacity: 0.75;
 }
 
 .ujs-btn-download {
@@ -1634,49 +1636,51 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   touch-action: manipulation;
   border-radius: calc(var(--ujs-btn-radius) + 5px);
   isolation: isolate;
-  transition: opacity 180ms ease;
-  --x-loader-state-tint: rgba(255, 255, 255, 0.08);
+  transition: none;
+  --x-loader-state-tint: rgba(255, 255, 255, 0.06);
   --x-loader-state-edge: rgba(255, 255, 255, 0.18);
-  --x-loader-glass-bg: rgba(14, 16, 19, 0.38);
-  --x-loader-glass-bg-fallback: rgba(18, 20, 23, 0.84);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.58)" : "rgba(235, 242, 247, 0.30)"};
-  --x-loader-glass-edge: rgba(255, 255, 255, 0.36);
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.60);
-  --x-loader-glass-caustic: rgba(255, 255, 255, 0.18);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.18);
-  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.36);
+  --x-loader-glass-bg: rgba(190, 191, 190, 0.42);
+  --x-loader-glass-bg-fallback: rgba(190, 191, 190, 0.70);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.72)" : "rgba(255, 255, 255, 0.48)"};
+  --x-loader-glass-edge: rgba(255, 255, 255, 0.64);
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.72);
+  --x-loader-glass-caustic: rgba(255, 255, 255, 0.20);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.26);
+  --x-loader-glass-bottom-shadow: rgba(22, 23, 24, 0.30);
   --x-loader-glass-shadow:
-    0 7px 16px rgba(0, 0, 0, 0.30),
-    0 2px 5px rgba(0, 0, 0, 0.24),
+    0 2.5px 6px rgba(0, 0, 0, 0.09),
+    0 0.5px 1.5px rgba(0, 0, 0, 0.07),
     0 0 0 0.5px rgba(255, 255, 255, 0.12);
   --x-loader-glass-text: rgba(255, 255, 255, 0.94);
-  --x-loader-glass-dot: rgba(255, 255, 255, 0.62);
+  --x-loader-glass-dot: rgba(255, 255, 255, 0.66);
   --x-loader-glass-sheen:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.40), rgba(255, 255, 255, 0.06) 34%, rgba(255, 255, 255, 0) 50%),
-    radial-gradient(120% 80% at 18% -12%, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.12) 44%, rgba(255, 255, 255, 0) 68%);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.10) 32%, rgba(255, 255, 255, 0) 52%),
+    radial-gradient(120% 86% at 18% -12%, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.14) 44%, rgba(255, 255, 255, 0) 68%);
 }
 .ujs-btn-download:hover {
-  --x-loader-glass-bg: rgba(18, 20, 23, 0.46);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.68)" : "rgba(235, 242, 247, 0.40)"};
-  --x-loader-glass-edge: rgba(255, 255, 255, 0.46);
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.70);
+  --x-loader-glass-bg: rgba(204, 205, 204, 0.48);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.80)" : "rgba(255, 255, 255, 0.58)"};
+  --x-loader-glass-edge: rgba(255, 255, 255, 0.74);
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.80);
   --x-loader-glass-caustic: rgba(255, 255, 255, 0.24);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.34);
 }
 .ujs-btn-download:active {
-  --x-loader-glass-bg: rgba(9, 11, 14, 0.54);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.42)" : "rgba(235, 242, 247, 0.24)"};
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.42);
+  --x-loader-glass-bg: rgba(164, 174, 184, 0.30);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.44)" : "rgba(255, 255, 255, 0.22)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.44);
   --x-loader-glass-caustic: rgba(255, 255, 255, 0.12);
+  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.24);
 }
 .ujs-btn-download:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.62);
+  outline: 1px solid rgba(255, 255, 255, 0.60);
   outline-offset: 2px;
 }
 .ujs-btn-download:hover .ujs-btn-common {
-  transform: translateY(-1px) scale(1.04);
+  transform: translateY(-0.5px) scale(1.02);
 }
 .ujs-btn-download:active .ujs-btn-common {
-  transform: translateY(0) scale(0.94);
+  transform: translateY(0.5px) scale(0.95);
 }
 .ujs-btn-common {
   width: var(--ujs-btn-size);
@@ -1689,10 +1693,9 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   border: 0;
   transform-origin: center;
   transition:
-    transform 160ms ease,
-    filter 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease;
+    transform 90ms ease,
+    filter 70ms linear,
+    box-shadow 80ms ease;
 }
 .ujs-btn-background,
 .ujs-hover,
@@ -1703,21 +1706,22 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 .ujs-btn-background {
   color: var(--x-loader-glass-text);
   background:
-    radial-gradient(85% 70% at 20% -10%, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.10) 46%, rgba(255, 255, 255, 0) 68%),
-    radial-gradient(95% 82% at 86% 108%, var(--x-loader-glass-caustic), rgba(255, 255, 255, 0) 62%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06) 24%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(180deg, var(--x-loader-state-tint), rgba(255, 255, 255, 0.04) 44%, rgba(0, 0, 0, 0.24)),
+    radial-gradient(92% 74% at 20% -14%, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.16) 48%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(100% 88% at 88% 116%, var(--x-loader-glass-caustic), rgba(255, 255, 255, 0) 64%),
+    linear-gradient(142deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.07) 28%, rgba(255, 255, 255, 0) 54%),
+    linear-gradient(180deg, var(--x-loader-state-tint), rgba(255, 255, 255, 0.08) 42%, rgba(21, 22, 23, 0.16)),
     var(--x-loader-glass-bg);
   border: 1px solid var(--x-loader-glass-border);
   background-clip: padding-box;
-  -webkit-backdrop-filter: blur(18px) saturate(190%) contrast(1.06) brightness(1.06);
-  backdrop-filter: blur(18px) saturate(190%) contrast(1.06) brightness(1.06);
+  -webkit-backdrop-filter: saturate(210%) blur(4px) contrast(1.08) brightness(1.08);
+  backdrop-filter: saturate(210%) blur(4px) contrast(1.08) brightness(1.08);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70),
     inset 1px 0 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 0 1px var(--x-loader-glass-inner-rim),
+    inset 0 0 0 0.5px var(--x-loader-glass-inner-rim),
     inset 0 -1px 1px var(--x-loader-glass-bottom-shadow),
-    0 0 0 0.5px var(--x-loader-state-edge);
+    0 0 0 0.5px rgba(0, 0, 0, 0.18),
+    0 0 0 1px var(--x-loader-state-edge);
 }
 .ujs-btn-background::before,
 .ujs-btn-background::after {
@@ -1729,23 +1733,23 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 .ujs-btn-background::before {
   inset: 1px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.08) 28%, rgba(255, 255, 255, 0) 52%),
-    radial-gradient(70% 60% at 62% 72%, rgba(255, 255, 255, 0.14), transparent 66%);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.10) 28%, rgba(255, 255, 255, 0) 54%),
+    radial-gradient(82% 62% at 64% 70%, rgba(255, 255, 255, 0.14), transparent 68%);
   mix-blend-mode: screen;
-  opacity: 0.74;
+  opacity: 0.62;
 }
 .ujs-btn-background::after {
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 20%, transparent 63%, rgba(255, 255, 255, 0.10)),
-    radial-gradient(90% 70% at 50% 115%, rgba(0, 0, 0, 0.30), transparent 62%);
-  opacity: 0.72;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 18%, transparent 62%, rgba(0, 0, 0, 0.12)),
+    radial-gradient(86% 66% at 50% 116%, rgba(0, 0, 0, 0.22), transparent 62%);
+  opacity: 0.54;
 }
 .ujs-hover {
   background:
-    radial-gradient(95% 75% at 28% -8%, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0) 64%),
-    radial-gradient(90% 85% at 82% 100%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
+    radial-gradient(95% 76% at 28% -8%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 64%),
+    radial-gradient(90% 86% at 82% 102%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
   border: 0;
   mix-blend-mode: screen;
   opacity: 0;
@@ -1757,40 +1761,40 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   filter: brightness(0.92) saturate(1.04);
 }
 .ujs-btn-download:active .ujs-hover {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.18));
-  opacity: 1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.16));
+  opacity: 0.38;
 }
 .ujs-btn-download.ujs-already-downloaded {
-  --x-loader-state-tint: rgba(10, 132, 255, 0.26);
-  --x-loader-state-edge: rgba(10, 132, 255, 0.42);
+  --x-loader-state-tint: rgba(105, 178, 255, 0.08);
+  --x-loader-state-edge: rgba(105, 178, 255, 0.16);
 }
 .ujs-btn-download.ujs-downloading {
-  --x-loader-state-tint: rgba(48, 209, 88, 0.28);
-  --x-loader-state-edge: rgba(48, 209, 88, 0.44);
+  --x-loader-state-tint: rgba(123, 222, 153, 0.10);
+  --x-loader-state-edge: rgba(123, 222, 153, 0.18);
 }
 .ujs-btn-download.ujs-downloaded {
-  --x-loader-state-tint: rgba(48, 209, 88, 0.30);
-  --x-loader-state-edge: rgba(48, 209, 88, 0.48);
-  --x-loader-glass-bg: rgba(205, 214, 219, 0.50);
-  --x-loader-glass-bg-fallback: rgba(205, 214, 219, 0.88);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.70)" : "rgba(255, 255, 255, 0.38)"};
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.82);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.34);
-  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.15);
-  --x-loader-glass-text: rgba(13, 16, 18, 0.88);
-  --x-loader-glass-dot: rgba(13, 16, 18, 0.36);
+  --x-loader-state-tint: rgba(123, 222, 153, 0.10);
+  --x-loader-state-edge: rgba(123, 222, 153, 0.20);
+  --x-loader-glass-bg: rgba(190, 197, 192, 0.44);
+  --x-loader-glass-bg-fallback: rgba(190, 197, 192, 0.70);
+  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.74)" : "rgba(255, 255, 255, 0.50)"};
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.74);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.28);
+  --x-loader-glass-bottom-shadow: rgba(30, 36, 32, 0.24);
+  --x-loader-glass-text: rgba(255, 255, 255, 0.94);
+  --x-loader-glass-dot: rgba(255, 255, 255, 0.68);
 }
 .ujs-btn-download.ujs-error {
-  --x-loader-state-tint: rgba(255, 69, 58, 0.30);
-  --x-loader-state-edge: rgba(255, 69, 58, 0.62);
-  --x-loader-glass-bg: rgba(255, 255, 255, 0.78);
-  --x-loader-glass-bg-fallback: rgba(255, 255, 255, 0.94);
-  --x-loader-glass-border: rgba(255, 69, 58, 0.44);
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.76);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.34);
-  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.16);
-  --x-loader-glass-text: rgba(0, 0, 0, 0.90);
-  --x-loader-glass-dot: rgba(0, 0, 0, 0.34);
+  --x-loader-state-tint: rgba(255, 112, 105, 0.10);
+  --x-loader-state-edge: rgba(255, 112, 105, 0.20);
+  --x-loader-glass-bg: rgba(199, 188, 188, 0.44);
+  --x-loader-glass-bg-fallback: rgba(199, 188, 188, 0.70);
+  --x-loader-glass-border: rgba(255, 225, 223, 0.52);
+  --x-loader-glass-highlight: rgba(255, 255, 255, 0.72);
+  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.26);
+  --x-loader-glass-bottom-shadow: rgba(44, 31, 31, 0.24);
+  --x-loader-glass-text: rgba(255, 255, 255, 0.94);
+  --x-loader-glass-dot: rgba(255, 255, 255, 0.66);
 }
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .ujs-btn-download .ujs-btn-background {
@@ -1803,13 +1807,13 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 
 .ujs-btn-done {
   box-shadow:
-    0 0 0 1px rgba(48, 209, 88, 0.44),
-    0 0 10px rgba(48, 209, 88, 0.48);
+    0 0 0 1px rgba(123, 222, 153, 0.28),
+    0 0 9px rgba(123, 222, 153, 0.24);
 }
 .ujs-btn-error {
   box-shadow:
-    0 0 0 1px rgba(255, 69, 58, 0.44),
-    0 0 10px rgba(255, 69, 58, 0.48);
+    0 0 0 1px rgba(255, 112, 105, 0.30),
+    0 0 9px rgba(255, 112, 105, 0.24);
 }
 
 .ujs-btn-error-text {
