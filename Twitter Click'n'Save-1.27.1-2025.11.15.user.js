@@ -1,32 +1,25 @@
 // ==UserScript==
 // @name        X-Loader
-// @version     1.2.2
-// @namespace   gh.paytonison
-// @description Safari-optimized media downloader for images, videos, GIFs, and banners on X/Twitter.
+// @version     1.27.1-2025.11.15
+// @namespace   gh.alttiri
+// @description Add buttons to download images and videos in Twitter, also does some other enhancements.
 // @match       https://twitter.com/*
 // @match       https://x.com/*
-// @homepageURL https://github.com/paytonison/x-loader
-// @supportURL  https://github.com/paytonison/x-loader/issues
+// @homepageURL https://github.com/AlttiRi/twitter-click-and-save
+// @supportURL  https://github.com/AlttiRi/twitter-click-and-save/issues
 // @license     GPL-3.0
 // @grant       GM.registerMenuCommand
-// @grant       GM_registerMenuCommand
-// @grant       GM.download
-// @grant       GM_download
-// @connect     pbs.twimg.com
-// @connect     video.twimg.com
-// @connect     abs.twimg.com
-// @connect     twitter.com
-// @connect     x.com
-// @downloadURL https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
-// @updateURL   https://raw.githubusercontent.com/paytonison/x-loader/main/X-Loader.user.js
+// @icon        https://raw.githubusercontent.com/AlttiRi/twitter-click-and-save/master/x-icon-with-button.png
+// @downloadURL https://update.greasyfork.org/scripts/430132/Twitter%20Click%27n%27Save.user.js
+// @updateURL https://update.greasyfork.org/scripts/430132/Twitter%20Click%27n%27Save.meta.js
 // ==/UserScript==
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
 
 
-// Please report bugs and suggestions on GitHub.
-// --> https://github.com/paytonison/x-loader/issues <--
+// Please, report bugs and suggestions on GitHub, not Greasyfork. I rarely visit Greasyfork.
+// --> https://github.com/AlttiRi/twitter-click-and-save/issues <--
 
 
 
@@ -127,8 +120,8 @@ const datePattern = "YYYY.MM.DD";
 /**
  * I strongly do NOT recommend to change the filename pattern format.
  *
- * The filename may look a bit long, but keeping the date, author, tweet id,
- * and media name makes repeated downloads easier to identify.
+ * The filename may look a bit long, but here I wrote why the used filename pattern is the way it is:
+ * https://github.com/AlttiRi/twitter-click-and-save?tab=readme-ov-file#filename-format
  *
  * If you really need to change it, and you understand WHAT and WHY you do,
  * you can modify the follow lines in the source code.
@@ -141,16 +134,8 @@ const backgroundFilenameTemplate = `[twitter][bg] {username}—{lastModifiedDate
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-registerMenuCommand("Show settings", showSettings);
-
-function registerMenuCommand(caption, handler) {
-    if (typeof GM === "object" && GM && typeof GM.registerMenuCommand === "function") {
-        void GM.registerMenuCommand(caption, handler);
-        return;
-    }
-    if (typeof GM_registerMenuCommand === "function") {
-        GM_registerMenuCommand(caption, handler);
-    }
+if (typeof GM === "object" && typeof GM?.registerMenuCommand === "function") {
+    void GM.registerMenuCommand("Show settings", showSettings);
 }
 
 const settings = loadSettings();
@@ -222,11 +207,6 @@ function execFeatures() {
 // --- Script runner --- //
 
 (function starter(feats) {
-    if (!document.body) {
-        document.addEventListener("DOMContentLoaded", () => starter(feats), {once: true});
-        return;
-    }
-
     const {once, onChangeImmediate, onChange} = feats;
 
     once();
@@ -234,7 +214,7 @@ function execFeatures() {
     const onChangeThrottled = throttle(onChange, 250);
     onChangeThrottled();
 
-    const targetNode = document.body;
+    const targetNode = document.querySelector("body");
     const observerOptions = {
         subtree: true,
         childList: true,
@@ -491,9 +471,9 @@ function getLocalStorages() {
 // --- Twitter.Features --- //
 function hoistFeatures() {
     // ❌ image
-    const errorStyle   = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/274c.svg"); background-size: 15px 15px; background-position: center; background-repeat: no-repeat;`;
+    const errorStyle   = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/274c.svg"); background-size: 1.5em; background-position: center; background-repeat: no-repeat;`;
     // ⚠  image
-    const warningStyle = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/26a0.svg"); background-size: 15px 15px; background-position: center; background-repeat: no-repeat;`;
+    const warningStyle = `background-image: url("https://abs-0.twimg.com/emoji/v2/svg/26a0.svg"); background-size: 1.5em; background-position: center; background-repeat: no-repeat;`;
 
     class Btn {
         /**
@@ -512,10 +492,9 @@ function hoistFeatures() {
                 console.error(err);
             }
             const btnErrorTextElem = btn.querySelector(".ujs-btn-error-text");
-            Btn.finishDownloading(btn);
             btn.classList.add("ujs-error");
             btnErrorTextElem.textContent = "";
-            btnErrorTextElem.style.cssText = errorStyle;
+            btnErrorTextElem.style = errorStyle;
             let title = err.message;
             if (text) {
                 title = text + "\n" + err.message;
@@ -531,7 +510,7 @@ function hoistFeatures() {
             const btnErrorTextElem = btn.querySelector(".ujs-btn-error-text");
             btn.classList.add("ujs-error");
             btnErrorTextElem.textContent = "";
-            btnErrorTextElem.style.cssText = warningStyle;
+            btnErrorTextElem.style = warningStyle;
             btn.title = "[warning] " + text;
         }
         static getFFHint() {
@@ -551,9 +530,6 @@ function hoistFeatures() {
         }
         static startDownloading(btn) {  // on the button click, let's start do things
             btn.classList.add("ujs-downloading");
-        }
-        static finishDownloading(btn) {
-            btn.classList.remove("ujs-downloading");
         }
         static connectionWaiting(btn) { // the resource request was sent, waiting for the response
             btn.title = "Downloading... (waiting for connection)";
@@ -576,16 +552,13 @@ function hoistFeatures() {
         static getOnProgress(btn) {
             const btnProgress = btn.querySelector(".ujs-progress");
             const onProgress = ({loaded, total}) => {
-                const loadedNumber = Number(loaded) || 0;
-                const totalNumber = Number(total) || 0;
-                const progress = totalNumber > 0 ? Math.min(90, loadedNumber / totalNumber * 90) : (loadedNumber > 0 ? 12 : 6);
-                btnProgress.style.cssText = "--progress: " + progress + "%";
-                btnProgress.dataset.downloaded = loadedNumber;
-                btnProgress.dataset.total = totalNumber;
-                if (!totalNumber) {
-                    btn.title = `Downloading: ${formatSizeWinLike(loadedNumber)}`;
+                btnProgress.style.cssText = "--progress: " + loaded / total * 90 + "%"; // [note] total can be `0`
+                btnProgress.dataset.downloaded = loaded;
+                btnProgress.dataset.total = total;
+                if (!total) {
+                    btn.title = `Downloading: ${formatSizeWinLike(loaded)}`;
                 } else {
-                    btn.title = `Downloading: ${formatSizeWinLike(loadedNumber)} / ${formatSizeWinLike(totalNumber)}`;
+                    btn.title = `Downloading: ${formatSizeWinLike(loaded)} / ${formatSizeWinLike(total)}`;
                 }
             };
             return onProgress;
@@ -605,13 +578,10 @@ function hoistFeatures() {
         static resetMediaProgress(btn) {
             const mediaProgress = btn.querySelector(".ujs-media-progress");
             mediaProgress.style.cssText = "--media-progress: 0%";
-            btn.classList.remove("ujs-media-progress-complete");
         }
         static setMediaProgress(btn, downloaded, total) {
             const mediaProgress = btn.querySelector(".ujs-media-progress");
-            const progress = Math.min(100, downloaded / total * 100 + 10);
-            mediaProgress.style.cssText = "--media-progress: " + progress + "%";
-            btn.classList.toggle("ujs-media-progress-complete", progress >= 100);
+            mediaProgress.style.cssText = "--media-progress: " + Math.min(100, downloaded / total * 100 + 10) + "%";
         }
         static isDownloaded(btn) {
             return btn.classList.contains("ujs-already-downloaded") || btn.classList.contains("ujs-downloaded");
@@ -835,11 +805,11 @@ function hoistFeatures() {
                     }
                 } else { // expanded_url
                     await sleep(10);
-                    const match = location.pathname.match(/\/video\/(\d)/);
+                    const match = location.pathname.match(/(?<=\/video\/)\d/);
                     if (!match) {
                         verbose && console.log("[ujs][videoHandler] missed match for match");
                     }
-                    videoIndex = Number(match?.[1] || 1) - 1;
+                    videoIndex = Number(match[0]) - 1;
 
                     console.warn("[ujs][videoHandler] videoIndex", videoIndex);
                     // todo: add support for expanded_url video downloading
@@ -910,37 +880,36 @@ function hoistFeatures() {
             let url = btn.dataset.url;
 
             const isBanner = url.includes("/profile_banners/");
-            try {
-                if (isBanner) {
-                    await Core._downloadBanner(url, btn);
-                    return;
-                }
+            if (isBanner) {
+                return Core._downloadBanner(url, btn);
+            }
 
-                const {id, author} = Tweet.of(btn);
-                verbose && console.log("[ujs][_imageClickHandler]", {id, author});
+            const {id, author} = Tweet.of(btn);
+            verbose && console.log("[ujs][_imageClickHandler]", {id, author});
+
+            try {
                 await Core._downloadPhotoMediaEntry(id, author, url, btn);
             } catch (err) {
-                const text = isBanner ? "Failed to download the profile banner." : "Failed to download the image.";
-                throw Btn.error({btn, err, text});
+                throw Btn.error({btn, err, text: "Failed to download the image."});
             }
         }
 
         static async _downloadBanner(url, btn) { // Banner/Background // todo: catch the error // add progress
-            Btn.clearState(btn);
             Btn.startDownloading(btn);
 
             const {blob, lastModifiedDate, extension, name} = await fetchResource(url);
             Core._verifyBlob(blob, url);
 
             const username = location.pathname.slice(1).split("/")[0];
-            const bannerMatch = url.match(/\/profile_banners\/(\d+)\/(\d+)\/(\d+x\d+)/);
-            const [, id, seconds] = bannerMatch || [];
+            const {
+                id, seconds, res
+            } = url.match(/(?<=\/profile_banners\/)(?<id>\d+)\/(?<seconds>\d+)\/(?<res>\d+x\d+)/)?.groups || {};
             // https://pbs.twimg.com/profile_banners/34743251/1596331248/1500x500
 
             const filename = renderTemplateString(backgroundFilenameTemplate, {
                 username, lastModifiedDate, id, seconds, extension,
             }).value;
-            await downloadBlob(blob, filename, url);
+            downloadBlob(blob, filename, url);
 
             Btn.markAsDownloaded(btn);
         }
@@ -1018,7 +987,7 @@ function hoistFeatures() {
             const filename = renderTemplateString(imageFilenameTemplate, {
                 author, lastModifiedDate, tweetId: id, name, extension, sampleText,
             }).value;
-            await downloadBlob(blob, filename, currentUrl);
+            downloadBlob(blob, filename, currentUrl);
 
             const downloaded = Btn.isDownloaded(btn);
             if (!downloaded && !isSample) {
@@ -1139,7 +1108,7 @@ function hoistFeatures() {
             const filename = renderTemplateString(videoFilenameTemplate, {
                 author, lastModifiedDate, tweetId: videoTweetId, name, extension,
             }).value;
-            await downloadBlob(blob, filename, url);
+            downloadBlob(blob, filename, url);
 
             const downloaded = Btn.isDownloaded(btn);
             if (!downloaded) {
@@ -1225,7 +1194,7 @@ function hoistFeatures() {
             }
 
             titleText = titleText.replace(new RegExp(`${I18N.ON_TWITTER}(?= ${OPEN_QUOTE})`), ":");
-            titleText = titleText.replace(new RegExp(`${CLOSE_QUOTE} \\\/ ${I18N.TWITTER}$`), CLOSE_QUOTE);
+            titleText = titleText.replace(new RegExp(`(?<=${CLOSE_QUOTE}) \\\/ ${I18N.TWITTER}$`), "");
             if (!lastUrlIsAttachment) {
                 const regExp = new RegExp(`(?<short> https:\\/\\/t\\.co\\/.{6,14})${CLOSE_QUOTE}$`);
                 titleText = titleText.replace(regExp, (match, p1, p2, offset, string) => `${CLOSE_QUOTE} —${p1}`);
@@ -1527,74 +1496,43 @@ function getUserScriptCSS() {
 }
 
 :root {
-    --ujs-btn-size: 44px;
-    --ujs-btn-hit-size: 58px;
-    --ujs-btn-radius: 16px;
-    --ujs-btn-offset: 4px;
-    --ujs-dot-size: 10px;
-    --ujs-dot-offset: 6px;
-    --ujs-dot-back-offset-x: 3px;
-    --ujs-dot-back-offset-y: 8px;
-    --ujs-red:   rgb(255, 69, 58);
-    --ujs-blue:  rgb(10, 132, 255);
-    --ujs-green: rgb(48, 209, 88);
-    --ujs-error: rgb(255, 255, 255);
+    --ujs-btn-size: 33px;
+    --ujs-btn-radius: 12px;
+    --ujs-dot-size: 7px;
+    --ujs-red:   rgba(255, 63, 95, 0.44);
+    --ujs-blue:  rgba(46, 152, 255, 0.38);
+    --ujs-green: rgba(61, 220, 112, 0.42);
+    --ujs-gray:  rgba(255, 255, 255, 0.66);
+    --ujs-error: white;
 }
 
 .ujs-progress {
-  background:
-    linear-gradient(to right, rgba(255, 255, 255, 0.34) var(--progress), transparent 0%),
-    radial-gradient(115% 84% at 20% -12%, rgba(255, 255, 255, 0.42), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04) 52%, rgba(0, 0, 0, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.08);
-  opacity: 0;
-  mix-blend-mode: screen;
-  transition: opacity 70ms linear;
+  background: linear-gradient(to right, rgba(92, 255, 142, 0.8) var(--progress), rgba(255,255,255,0.18) 0%);
 }
 
 .ujs-shadow {
-  background: transparent;
-  border: 0;
-  box-shadow: var(--x-loader-glass-shadow);
-  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.16));
-  transition: box-shadow 80ms ease;
-}
-.ujs-shadow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
   background:
-    radial-gradient(125% 86% at 10% -8%, rgba(255, 255, 255, 0.62), transparent 42%),
-    radial-gradient(96% 94% at 94% 108%, rgba(255, 255, 255, 0.22), transparent 60%),
-    var(--x-loader-glass-sheen);
+    radial-gradient(circle at 18% 14%, rgba(255,255,255,0.44), transparent 34%),
+    linear-gradient(155deg, rgba(255,255,255,0.24), transparent 34%, rgba(0,0,0,0.32) 100%);
   box-shadow:
-    inset 0 0 0 0.75px var(--x-loader-glass-edge),
-    inset 0 -4px 6px rgba(0, 0, 0, 0.24);
-  opacity: 0.72;
-  pointer-events: none;
+    inset 0 1px 1px rgba(255,255,255,0.58),
+    inset 0 -8px 14px rgba(0,0,0,0.26);
+  opacity: 0.78;
 }
 .ujs-btn-download:hover .ujs-hover {
-  opacity: 0.32;
+  opacity: 1;
 }
 .ujs-btn-download.ujs-downloading .ujs-shadow {
+  opacity: 1;
   box-shadow:
-    0 3px 7px rgba(0, 0, 0, 0.12),
-    0 0.5px 1.5px rgba(0, 0, 0, 0.10),
-    0 0 0 0.5px rgba(255, 255, 255, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-.ujs-btn-download.ujs-downloading .ujs-progress {
-  opacity: 0.46;
+    inset 0 1px 1px rgba(255,255,255,0.7),
+    inset 0 -10px 16px rgba(0,0,0,0.36),
+    0 0 14px rgba(88,255,139,0.28);
 }
 .ujs-btn-download:active .ujs-shadow {
   box-shadow:
-    0 1px 2.5px rgba(0, 0, 0, 0.13),
-    0 0.5px 0.5px rgba(0, 0, 0, 0.11),
-    inset 0 1px 1px rgba(255, 255, 255, 0.10);
+    inset 0 2px 6px rgba(0,0,0,0.32),
+    inset 0 -1px 1px rgba(255,255,255,0.44);
 }
 
 .ujs-btn-download.ujs-downloaded.ujs-recently-downloaded {
@@ -1602,270 +1540,162 @@ function getUserScriptCSS() {
 }
 
 li[role="listitem"]:hover .ujs-btn-download {
-    opacity: 0.75;
+    opacity: 1;
 }
 article[role=article]:hover .ujs-btn-download {
-    opacity: 0.75;
+    opacity: 1;
 }
 div[aria-label="${labelText}"]:hover .ujs-btn-download {
-    opacity: 0.75;
+    opacity: 1;
 }
 .ujs-btn-download.ujs-downloaded {
-    opacity: 0.75;
+    opacity: 1;
 }
 .ujs-btn-download.ujs-downloading {
-    opacity: 0.75;
+    opacity: 1;
 }
 [data-testid="videoComponent"]:hover + .ujs-btn-download {
-    opacity: 0.75;
+    opacity: 1;
 }
 [data-testid="videoComponent"] + .ujs-btn-download:hover {
-    opacity: 0.75;
+    opacity: 1;
 }
 
 .ujs-btn-download {
+  --ujs-status-tint: var(--ujs-red);
+  --ujs-status-edge: rgba(255, 125, 145, 0.56);
   cursor: pointer;
-  top: var(--ujs-btn-offset);
-  left: var(--ujs-btn-offset);
-  width: var(--ujs-btn-hit-size);
-  height: var(--ujs-btn-hit-size);
+  top: 0.5em;
+  left: 0.5em;
   position: absolute;
   opacity: 0;
-  z-index: 2;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  border-radius: calc(var(--ujs-btn-radius) + 5px);
+  width: var(--ujs-btn-size);
+  height: var(--ujs-btn-size);
+  border-radius: var(--ujs-btn-radius);
   isolation: isolate;
-  transition: none;
-  --x-loader-state-tint: rgba(255, 255, 255, 0.06);
-  --x-loader-state-edge: rgba(255, 255, 255, 0.18);
-  --x-loader-glass-bg: rgba(226, 234, 241, 0.58);
-  --x-loader-glass-bg-fallback: rgba(230, 235, 240, 0.92);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.96)" : "rgba(255, 255, 255, 0.74)"};
-  --x-loader-glass-edge: rgba(255, 255, 255, 0.90);
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.92);
-  --x-loader-glass-caustic: rgba(255, 255, 255, 0.34);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.48);
-  --x-loader-glass-bottom-shadow: rgba(12, 15, 18, 0.40);
-  --x-loader-glass-shadow:
-    0 7px 16px rgba(0, 0, 0, 0.22),
-    0 2px 4px rgba(0, 0, 0, 0.16),
-    0 0 0 0.75px rgba(255, 255, 255, 0.18);
-  --x-loader-glass-text: rgba(255, 255, 255, 0.94);
-  --x-loader-glass-dot: rgba(255, 255, 255, 0.66);
-  --x-loader-glass-sheen:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.16) 32%, rgba(255, 255, 255, 0) 52%),
-    radial-gradient(120% 86% at 18% -12%, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.24) 44%, rgba(255, 255, 255, 0) 68%);
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.34));
+  transform: translateZ(0);
+  transition: opacity 160ms ease-out, filter 160ms ease-out, transform 160ms ease-out;
 }
 .ujs-btn-download:hover {
-  --x-loader-glass-bg: rgba(238, 243, 247, 0.66);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.84)"};
-  --x-loader-glass-edge: rgba(255, 255, 255, 0.96);
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.98);
-  --x-loader-glass-caustic: rgba(255, 255, 255, 0.42);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.56);
+  filter: drop-shadow(0 13px 22px rgba(0,0,0,0.42));
+  transform: translateY(-1px);
 }
 .ujs-btn-download:active {
-  --x-loader-glass-bg: rgba(196, 210, 222, 0.52);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.74)" : "rgba(255, 255, 255, 0.48)"};
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.62);
-  --x-loader-glass-caustic: rgba(255, 255, 255, 0.20);
-  --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.34);
+  filter: drop-shadow(0 7px 12px rgba(0,0,0,0.34));
+  transform: translateY(0) scale(0.97);
 }
-.ujs-btn-download:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.60);
-  outline-offset: 2px;
+.ujs-btn-download::before,
+.ujs-btn-download::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
 }
-.ujs-btn-download:hover .ujs-btn-common {
-  transform: translateY(-0.5px) scale(1.02);
-  border-radius: calc(var(--ujs-btn-radius) + 2px);
+.ujs-btn-download::before {
+  z-index: 4;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.92), transparent 31%),
+    radial-gradient(circle at 78% 82%, rgba(255,255,255,0.42), transparent 28%);
+  mix-blend-mode: screen;
+  opacity: 0.52;
 }
-.ujs-btn-download:active .ujs-btn-common {
-  transform: translateY(0.5px) scale(0.95);
-  border-radius: calc(var(--ujs-btn-radius) + 4px);
+.ujs-btn-download::after {
+  z-index: 5;
+  inset: 1px;
+  border: 1px solid rgba(255,255,255,0.42);
+  box-shadow:
+    inset 1px 1px 1px rgba(255,255,255,0.54),
+    inset -1px -1px 1px rgba(0,0,0,0.2);
 }
 .ujs-btn-common {
   width: var(--ujs-btn-size);
   height: var(--ujs-btn-size);
-  border-radius: var(--ujs-btn-radius);
-  top: calc((var(--ujs-btn-hit-size) - var(--ujs-btn-size)) / 2);
-  left: calc((var(--ujs-btn-hit-size) - var(--ujs-btn-size)) / 2);
+  border-radius: inherit;
+  inset: 0;
   position: absolute;
   box-sizing: border-box;
-  border: 0;
-  transform-origin: center;
-  transition:
-    transform 90ms ease,
-    border-radius 120ms ease,
-    filter 70ms linear,
-    box-shadow 80ms ease;
-}
-.ujs-btn-background,
-.ujs-hover,
-.ujs-progress,
-.ujs-btn-error-text {
   overflow: hidden;
-}
-.ujs-btn-background {
-  color: var(--x-loader-glass-text);
-  background:
-    radial-gradient(92% 74% at 20% -14%, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.16) 48%, rgba(255, 255, 255, 0) 70%),
-    radial-gradient(100% 88% at 88% 116%, var(--x-loader-glass-caustic), rgba(255, 255, 255, 0) 64%),
-    linear-gradient(142deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.07) 28%, rgba(255, 255, 255, 0) 54%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.03) 30%, rgba(0, 0, 0, 0.18) 100%),
-    linear-gradient(180deg, var(--x-loader-state-tint), rgba(255, 255, 255, 0.08) 42%, rgba(21, 22, 23, 0.16)),
-    var(--x-loader-glass-bg);
-  border: 1.5px solid var(--x-loader-glass-border);
-  background-clip: padding-box;
-  -webkit-backdrop-filter: saturate(190%) blur(5px) contrast(1.10) brightness(1.06);
-  backdrop-filter: saturate(190%) blur(5px) contrast(1.10) brightness(1.06);
-  box-shadow:
-    inset 0 2px 1px rgba(255, 255, 255, 0.78),
-    inset 3px 0 4px rgba(255, 255, 255, 0.24),
-    inset -3px 0 4px rgba(0, 0, 0, 0.16),
-    inset 0 0 0 1px var(--x-loader-glass-inner-rim),
-    inset 0 -6px 8px var(--x-loader-glass-bottom-shadow),
-    0 0 0 0.75px rgba(0, 0, 0, 0.20),
-    0 0 0 1px var(--x-loader-state-edge);
-}
-.ujs-btn-background::before,
-.ujs-btn-background::after {
-  content: "";
-  position: absolute;
-  border-radius: inherit;
-  pointer-events: none;
-}
-.ujs-btn-background::before {
-  inset: 2px 2px 8px 2px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.16) 30%, rgba(255, 255, 255, 0) 58%),
-    radial-gradient(82% 62% at 64% 70%, rgba(255, 255, 255, 0.18), transparent 68%);
-  mix-blend-mode: screen;
-  opacity: 0.78;
-}
-.ujs-btn-background::after {
-  inset: 0 1px 1px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.30), transparent 18%, transparent 52%, rgba(0, 0, 0, 0.26)),
-    radial-gradient(92% 52% at 50% 112%, rgba(0, 0, 0, 0.34), transparent 66%),
-    radial-gradient(88% 60% at 50% 96%, rgba(255, 255, 255, 0.18), transparent 64%);
-  opacity: 0.72;
-}
-.ujs-hover {
-  background:
-    radial-gradient(95% 76% at 28% -8%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 64%),
-    radial-gradient(90% 86% at 82% 102%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
   border: 0;
-  mix-blend-mode: screen;
+}
+.ujs-not-downloaded .ujs-btn-background {
+  --ujs-status-tint: var(--ujs-red);
+  --ujs-status-edge: rgba(255, 125, 145, 0.56);
+}
+
+.ujs-already-downloaded .ujs-btn-background {
+  --ujs-status-tint: var(--ujs-blue);
+  --ujs-status-edge: rgba(108, 190, 255, 0.54);
+}
+
+.ujs-btn-background {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 30% 18%, rgba(255,255,255,0.88) 0 8%, rgba(255,255,255,0.36) 22%, transparent 48%),
+    linear-gradient(145deg, rgba(255,255,255,0.42), rgba(255,255,255,0.14) 38%, rgba(0,0,0,0.28) 100%),
+    linear-gradient(160deg, var(--ujs-status-edge), var(--ujs-status-tint) 48%, rgba(255,255,255,0.18));
+  border: ${settings.addBorder ? "2px solid rgba(255,255,255,0.92)" : "1px solid rgba(255,255,255,0.58)"};
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.72),
+    inset 0 -1px 2px rgba(0,0,0,0.24),
+    0 1px 1px rgba(255,255,255,0.18);
+  backdrop-filter: blur(14px) saturate(180%) brightness(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(180%) brightness(1.08);
+}
+
+.ujs-hover {
+  z-index: 1;
   opacity: 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.52), transparent 55%),
+    linear-gradient(to bottom, rgba(255,255,255,0.2), transparent 58%);
+  transition: opacity 160ms ease-out;
 }
-.ujs-btn-download:hover .ujs-btn-background {
-  filter: brightness(1.06) saturate(1.08);
+
+.ujs-shadow {
+  z-index: 2;
 }
-.ujs-btn-download:active .ujs-btn-background {
-  filter: brightness(0.92) saturate(1.04);
+
+.ujs-progress {
+  z-index: 3;
+  top: auto;
+  bottom: 0;
+  height: 5px;
+  border-radius: 0 0 var(--ujs-btn-radius) var(--ujs-btn-radius);
+  opacity: 0;
+  transition: opacity 120ms ease-out;
 }
-.ujs-btn-download:active .ujs-hover {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.16));
-  opacity: 0.38;
-}
-.ujs-btn-download.ujs-already-downloaded {
-  --x-loader-state-tint: rgba(105, 178, 255, 0.08);
-  --x-loader-state-edge: rgba(105, 178, 255, 0.16);
-}
-.ujs-btn-download.ujs-downloading {
-  --x-loader-state-tint: rgba(123, 222, 153, 0.10);
-  --x-loader-state-edge: rgba(123, 222, 153, 0.18);
-}
-.ujs-btn-download.ujs-downloaded {
-  --x-loader-state-tint: rgba(123, 222, 153, 0.10);
-  --x-loader-state-edge: rgba(123, 222, 153, 0.20);
-  --x-loader-glass-bg: rgba(206, 218, 211, 0.62);
-  --x-loader-glass-bg-fallback: rgba(215, 224, 218, 0.90);
-  --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.68)"};
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.86);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.44);
-  --x-loader-glass-bottom-shadow: rgba(23, 36, 29, 0.36);
-  --x-loader-glass-text: rgba(255, 255, 255, 0.94);
-  --x-loader-glass-dot: rgba(255, 255, 255, 0.68);
-}
-.ujs-btn-download.ujs-error {
-  --x-loader-state-tint: rgba(255, 112, 105, 0.10);
-  --x-loader-state-edge: rgba(255, 112, 105, 0.20);
-  --x-loader-glass-bg: rgba(215, 200, 200, 0.62);
-  --x-loader-glass-bg-fallback: rgba(224, 211, 211, 0.90);
-  --x-loader-glass-border: rgba(255, 225, 223, 0.72);
-  --x-loader-glass-highlight: rgba(255, 255, 255, 0.84);
-  --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.42);
-  --x-loader-glass-bottom-shadow: rgba(44, 31, 31, 0.34);
-  --x-loader-glass-text: rgba(255, 255, 255, 0.94);
-  --x-loader-glass-dot: rgba(255, 255, 255, 0.66);
-}
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .ujs-btn-download .ujs-btn-background {
-    background:
-      radial-gradient(85% 70% at 20% -10%, var(--x-loader-glass-highlight), rgba(255, 255, 255, 0.10) 46%, rgba(255, 255, 255, 0) 68%),
-      linear-gradient(180deg, var(--x-loader-state-tint), rgba(255, 255, 255, 0.04) 44%, rgba(0, 0, 0, 0.24)),
-      var(--x-loader-glass-bg-fallback);
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .ujs-btn-download {
-    --x-loader-glass-bg: rgba(238, 240, 242, 0.96);
-    --x-loader-glass-bg-fallback: rgba(238, 240, 242, 0.96);
-    --x-loader-glass-border: ${settings.addBorder ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.66)"};
-    --x-loader-glass-edge: rgba(255, 255, 255, 0.84);
-    --x-loader-glass-highlight: rgba(255, 255, 255, 0.84);
-    --x-loader-glass-caustic: rgba(255, 255, 255, 0.18);
-    --x-loader-glass-inner-rim: rgba(255, 255, 255, 0.28);
-    --x-loader-glass-bottom-shadow: rgba(0, 0, 0, 0.12);
-    --x-loader-glass-text: rgba(25, 27, 29, 0.90);
-    --x-loader-glass-dot: rgba(25, 27, 29, 0.62);
-  }
-  .ujs-btn-download .ujs-btn-background {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.14) 44%, rgba(0, 0, 0, 0.07)),
-      var(--x-loader-glass-bg-fallback);
-  }
-  .ujs-btn-download .ujs-hover,
-  .ujs-btn-download .ujs-progress {
-    mix-blend-mode: normal;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ujs-btn-download,
-  .ujs-btn-common,
-  .ujs-progress,
-  .ujs-shadow {
-    transition: none;
-  }
-  .ujs-btn-download:hover .ujs-btn-common,
-  .ujs-btn-download:active .ujs-btn-common {
-    transform: none;
-    border-radius: var(--ujs-btn-radius);
-  }
+.ujs-btn-download.ujs-downloading .ujs-progress {
+  opacity: 1;
 }
 
 .ujs-btn-done {
-  box-shadow:
-    0 0 0 1px rgba(123, 222, 153, 0.28),
-    0 0 9px rgba(123, 222, 153, 0.24);
+  box-shadow: 0 0 6px var(--ujs-green);
 }
 .ujs-btn-error {
-  box-shadow:
-    0 0 0 1px rgba(255, 112, 105, 0.30),
-    0 0 9px rgba(255, 112, 105, 0.24);
+  box-shadow: 0 0 6px var(--ujs-red);
+}
+
+.ujs-downloaded .ujs-btn-background {
+  --ujs-status-tint: var(--ujs-green);
+  --ujs-status-edge: rgba(145, 255, 177, 0.58);
+}
+
+.ujs-error .ujs-btn-background {
+  --ujs-status-tint: rgba(255,255,255,0.74);
+  --ujs-status-edge: rgba(255,255,255,0.92);
 }
 
 .ujs-btn-error-text {
+  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--x-loader-glass-text);
-  font-size: 10px;
+  color: black;
+  font-size: 100%;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.58);
 }
 .ujs-modal-settings fieldset {
     border: 1px solid grey;
@@ -1899,24 +1729,59 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
     position: absolute;
     width: var(--ujs-dot-size);
     height: var(--ujs-dot-size);
-    background: var(--x-loader-glass-dot) linear-gradient(to right, var(--x-loader-glass-text) var(--media-progress), transparent 0%);
-    border-radius: 25%;
+    background: rgba(255, 255, 255, 0.5) linear-gradient(to right, white var(--media-progress), rgba(255,255,255,0.18) 0%);
+    border-radius: 34%;
+    box-shadow:
+        inset 0 1px 1px rgba(255,255,255,0.74),
+        0 1px 3px rgba(0,0,0,0.28);
+    z-index: 7;
 
-    bottom: var(--ujs-dot-offset);
-    right: var(--ujs-dot-offset);
+    bottom: 4px;
+    right: 4px;
 }
 .ujs-btn-download[data-is-multi-media] .ujs-dot.ujs-back {
-    bottom: var(--ujs-dot-back-offset-y);
-    right: var(--ujs-dot-back-offset-x);
+    bottom: 5px;
+    right: 2px;
 
     background: transparent;
-    border-top:   1px solid var(--x-loader-glass-dot);
-    border-right: 1px solid var(--x-loader-glass-dot);
+    border-top:   1px solid rgba(255, 255, 255, 0.5);
+    border-right: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.ujs-btn-download[data-is-multi-media].ujs-media-progress-complete .ujs-dot.ujs-back {
-    border-top:   1px solid var(--x-loader-glass-text);
-    border-right: 1px solid var(--x-loader-glass-text);
+.ujs-btn-download[data-is-multi-media] .ujs-dot[style="--media-progress: 100%;"] + .ujs-back {
+    border-top:   1px solid white;
+    border-right: 1px solid white;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .ujs-btn-background {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background:
+      linear-gradient(145deg, rgba(255,255,255,0.82), rgba(255,255,255,0.3)),
+      linear-gradient(160deg, var(--ujs-status-edge), var(--ujs-status-tint));
+  }
+}
+
+@media (prefers-contrast: more) {
+  .ujs-btn-background {
+    border-color: rgba(255,255,255,0.96);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.54),
+      0 0 0 1px rgba(255,255,255,0.82);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ujs-btn-download,
+  .ujs-hover,
+  .ujs-progress {
+    transition: none;
+  }
+  .ujs-btn-download:hover,
+  .ujs-btn-download:active {
+    transform: none;
+  }
 }
 
 `;
@@ -2022,15 +1887,11 @@ function hoistTweet() {
         }
 
         get author() {
-            try {
-                return new URL(this.url).pathname.split("/").filter(Boolean)[0];
-            } catch (err) {
-                return this.url.match(/(?:twitter|x)\.com\/([^\/]+)/)?.[1];
-            }
+            return this.url.match(/(?<=(twitter|x)\.com\/).+?(?=\/)/)?.[0];
         }
 
         get id() {
-            return this.url.match(/\/status\/(\d+)/)?.[1];
+            return this.url.match(/(?<=\/status\/)\d+/)?.[0];
         }
     }
 
@@ -2059,10 +1920,7 @@ function hoistAPI() {
                 throw err;
             }
 
-            const authorizationKey = text.match(/"(AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D.+?)"/)?.[1];
-            if (!authorizationKey) {
-                throw new Error("Authorization key not found");
-            }
+            const authorizationKey = text.match(/(?<=")AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D.+?(?=")/)[0];
             const authorization = `Bearer ${authorizationKey}`;
 
             return authorization;
@@ -2545,7 +2403,7 @@ function getHistoryHelper() {
         // localStorage.setItem(StorageNames.migrated, "true");
     }
 
-    async function exportHistory(onDone) {
+    function exportHistory(onDone) {
         const exportObject = [
             StorageNames.settings,
             StorageNames.settingsImageHistoryBy,
@@ -2567,7 +2425,7 @@ function getHistoryHelper() {
         const browserName = localStorage.getItem(StorageNames.browserName) || getBrowserName();
         const browserLine = browserName ? "-" + browserName : "";
 
-        await downloadBlob(new Blob([toLineJSON(exportObject, true)]), `ujs-twitter-click-n-save-export-${formatDate(new Date(), datePattern)}${browserLine}.json`);
+        downloadBlob(new Blob([toLineJSON(exportObject, true)]), `ujs-twitter-click-n-save-export-${formatDate(new Date(), datePattern)}${browserLine}.json`);
         onDone();
     }
 
@@ -2775,102 +2633,19 @@ function getUtils({verbose}) {
     }
 
     function extensionFromMime(mimeType) {
-        const cleanMimeType = mimeType.split(";")[0].trim();
-        let extension = cleanMimeType.split("/")[1] || "";
+        let extension = mimeType.match(/(?<=\/).+/)[0];
         extension = extension === "jpeg" ? "jpg" : extension;
         return extension;
     }
 
     // the original download url will be posted as hash of the blob url, so you can check it in the download manager's history
-    async function downloadBlob(blob, name, url) {
-        const directUrl = url ? url.toString() : "";
-        if (directUrl) {
-            try {
-                const gmDownloadStarted = await tryGMDownload({url: directUrl, filename: name});
-                if (gmDownloadStarted) {
-                    return;
-                }
-            } catch (err) {
-                verbose && console.warn("[ujs][downloadBlob][GM]", err);
-            }
-        }
-
+    function downloadBlob(blob, name, url) {
         const anchor = document.createElement("a");
         anchor.setAttribute("download", name || "");
         const blobUrl = URL.createObjectURL(blob);
         anchor.href = blobUrl + (url ? ("#" + url) : "");
-        anchor.style.display = "none";
-        document.body.append(anchor);
         anchor.click();
-        anchor.remove();
-        await sleep(0);
         setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-    }
-
-    function getGMDownload() {
-        if (typeof GM === "object" && GM && typeof GM.download === "function") {
-            return {name: "GM.download", fn: GM.download.bind(GM)};
-        }
-        if (typeof GM_download === "function") {
-            return {name: "GM_download", fn: GM_download};
-        }
-        return null;
-    }
-
-    function toDownloadError(err, fallbackMessage) {
-        if (err instanceof Error) {
-            return err;
-        }
-        return new Error(err?.message || String(err || fallbackMessage));
-    }
-
-    async function tryGMDownload({url, filename}) {
-        const gmDownload = getGMDownload();
-        if (!gmDownload) {
-            return false;
-        }
-
-        return new Promise((resolve, reject) => {
-            let settled = false;
-            const settle = (callback, value) => {
-                if (settled) {
-                    return;
-                }
-                settled = true;
-                clearTimeout(triggerTimer);
-                callback(value);
-            };
-            const triggerTimer = setTimeout(() => settle(resolve, true), 2000);
-            const details = {
-                url,
-                name: filename || "",
-                onload: () => settle(resolve, true),
-                onerror: err => settle(reject, toDownloadError(err, `${gmDownload.name} failed to download ${url}`)),
-                ontimeout: err => settle(reject, toDownloadError(err, `${gmDownload.name} timed out downloading ${url}`)),
-            };
-
-            try {
-                const result = gmDownload.fn(details);
-                if (result && typeof result.then === "function") {
-                    result.then(
-                        () => settle(resolve, true),
-                        err => settle(reject, toDownloadError(err, `${gmDownload.name} failed to download ${url}`))
-                    );
-                }
-            } catch (err) {
-                clearTimeout(triggerTimer);
-                try {
-                    const result = gmDownload.fn(url, filename || "");
-                    if (result && typeof result.then === "function") {
-                        result.then(resolve, reject);
-                        return;
-                    }
-                    resolve(true);
-                } catch (fallbackErr) {
-                    reject(toDownloadError(fallbackErr, `${gmDownload.name} failed`));
-                }
-            }
-        });
     }
 
     /**
@@ -2923,19 +2698,14 @@ function getUtils({verbose}) {
     function addCSS(css) {
         const styleElem = document.createElement("style");
         styleElem.textContent = css;
-        const styleRoot = document.head || document.body || document.documentElement;
-        styleRoot.append(styleElem);
+        document.body.append(styleElem);
         return styleElem;
     }
 
     function getCookie(name) {
         verbose && console.log("[ujs][getCookie]", document.cookie);
-        const prefix = name + "=";
-        const cookie = document.cookie
-            .split(";")
-            .map(item => item.trim())
-            .find(item => item.startsWith(prefix));
-        return cookie?.slice(prefix.length);
+        const regExp = new RegExp(`(?<=${name}=)[^;]+`);
+        return document.cookie.match(regExp)?.[0];
     }
 
     function throttle(runnable, time = 50) {
@@ -3043,17 +2813,6 @@ function getUtils({verbose}) {
     async function responseProgressProxy(response, onProgress) {
         const onProgressProps = getOnProgressProps(response);
         let loaded = 0;
-        if (isSafari || !response.body || typeof response.body.getReader !== "function") {
-            const blob = await response.blob();
-            if (onProgress) {
-                try {
-                    onProgress({loaded: blob.size, ...onProgressProps});
-                } catch (err) {
-                    console.error("[ujs][onProgress]:", err);
-                }
-            }
-            return new ResponseEx(blob, response);
-        }
         const reader = response.body.getReader();
 
         if (isFirefox) {
@@ -3145,18 +2904,11 @@ function getUtils({verbose}) {
 
     // Sometimes it's `false` for unknown reason in FF.
     const isFirefoxUserscriptContext = typeof wrappedJSObject === "object" && wrappedJSObject !== null;
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isFirefox = userAgent.indexOf("firefox") !== -1;
-    const isSafari =
-        userAgent.indexOf("safari") !== -1 &&
-        userAgent.indexOf("chrome") === -1 &&
-        userAgent.indexOf("crios") === -1 &&
-        userAgent.indexOf("fxios") === -1 &&
-        userAgent.indexOf("edg") === -1 &&
-        userAgent.indexOf("opr") === -1;
+    const isFirefox = navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
     verbose && console.log("[ujs] isFirefoxUserscriptContext", isFirefoxUserscriptContext);
 
     function getBrowserName() {
+        const userAgent = window.navigator.userAgent.toLowerCase();
         return userAgent.indexOf("edge") > -1 ? "edge-legacy"
             : userAgent.indexOf("edg") > -1 ? "edge"
             : userAgent.indexOf("opr") > -1 && !!window.opr ? "opera"
