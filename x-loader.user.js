@@ -1499,15 +1499,16 @@ function getUserScriptCSS() {
     --ujs-btn-size: 33px;
     --ujs-btn-radius: 12px;
     --ujs-dot-size: 7px;
-    --ujs-red:   rgba(255, 63, 95, 0.44);
-    --ujs-blue:  rgba(46, 152, 255, 0.38);
-    --ujs-green: rgba(61, 220, 112, 0.42);
+    --ujs-white: rgba(255, 255, 255, 0.5);
+    --ujs-white-edge: rgba(255, 255, 255, 0.86);
+    --ujs-complete-gray: rgba(142, 148, 156, 0.56);
+    --ujs-complete-edge: rgba(215, 219, 224, 0.72);
     --ujs-gray:  rgba(255, 255, 255, 0.66);
     --ujs-error: white;
 }
 
 .ujs-progress {
-  background: linear-gradient(to right, rgba(92, 255, 142, 0.8) var(--progress), rgba(255,255,255,0.18) 0%);
+  background: linear-gradient(to right, rgba(255,255,255,0.84) var(--progress), rgba(255,255,255,0.2) 0%);
 }
 
 .ujs-shadow {
@@ -1527,7 +1528,7 @@ function getUserScriptCSS() {
   box-shadow:
     inset 0 1px 1px rgba(255,255,255,0.7),
     inset 0 -10px 16px rgba(0,0,0,0.36),
-    0 0 14px rgba(88,255,139,0.28);
+    0 0 14px rgba(255,255,255,0.26);
 }
 .ujs-btn-download:active .ujs-shadow {
   box-shadow:
@@ -1562,8 +1563,8 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 
 .ujs-btn-download {
-  --ujs-status-tint: var(--ujs-red);
-  --ujs-status-edge: rgba(255, 125, 145, 0.56);
+  --ujs-status-tint: var(--ujs-white);
+  --ujs-status-edge: var(--ujs-white-edge);
   cursor: pointer;
   top: 0.5em;
   left: 0.5em;
@@ -1620,13 +1621,13 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   border: 0;
 }
 .ujs-not-downloaded .ujs-btn-background {
-  --ujs-status-tint: var(--ujs-red);
-  --ujs-status-edge: rgba(255, 125, 145, 0.56);
+  --ujs-status-tint: var(--ujs-white);
+  --ujs-status-edge: var(--ujs-white-edge);
 }
 
 .ujs-already-downloaded .ujs-btn-background {
-  --ujs-status-tint: var(--ujs-blue);
-  --ujs-status-edge: rgba(108, 190, 255, 0.54);
+  --ujs-status-tint: var(--ujs-complete-gray);
+  --ujs-status-edge: var(--ujs-complete-edge);
 }
 
 .ujs-btn-background {
@@ -1671,15 +1672,15 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 
 .ujs-btn-done {
-  box-shadow: 0 0 6px var(--ujs-green);
+  box-shadow: 0 0 6px rgba(255,255,255,0.56);
 }
 .ujs-btn-error {
-  box-shadow: 0 0 6px var(--ujs-red);
+  box-shadow: 0 0 6px rgba(255,255,255,0.56);
 }
 
 .ujs-downloaded .ujs-btn-background {
-  --ujs-status-tint: var(--ujs-green);
-  --ujs-status-edge: rgba(145, 255, 177, 0.58);
+  --ujs-status-tint: var(--ujs-complete-gray);
+  --ujs-status-edge: var(--ujs-complete-edge);
 }
 
 .ujs-error .ujs-btn-background {
