@@ -1499,15 +1499,15 @@ function getUserScriptCSS() {
     --ujs-btn-size: 42px;
     --ujs-btn-radius: 14px;
     --ujs-dot-size: 7px;
-    --ujs-glass-fill: rgba(245, 248, 255, 0.17);
-    --ujs-glass-fill-hover: rgba(245, 248, 255, 0.25);
-    --ujs-glass-fill-active: rgba(230, 235, 245, 0.18);
-    --ujs-glass-rim: rgba(255, 255, 255, 0.46);
-    --ujs-glass-rim-hover: rgba(255, 255, 255, 0.66);
-    --ujs-glass-glyph: rgba(255, 255, 255, 0.96);
-    --ujs-glass-glyph-shadow: rgba(0, 0, 0, 0.74);
-    --ujs-complete-gray: rgba(180, 186, 196, 0.18);
-    --ujs-complete-edge: rgba(238, 242, 248, 0.42);
+    --ujs-glass-fill: rgba(238, 241, 246, 0.31);
+    --ujs-glass-fill-hover: rgba(244, 247, 252, 0.38);
+    --ujs-glass-fill-active: rgba(226, 231, 240, 0.26);
+    --ujs-glass-rim: rgba(255, 255, 255, 0.72);
+    --ujs-glass-rim-hover: rgba(255, 255, 255, 0.82);
+    --ujs-glass-glyph: rgba(255, 255, 255, 0.98);
+    --ujs-glass-glyph-shadow: rgba(0, 0, 0, 0.58);
+    --ujs-complete-gray: rgba(180, 186, 196, 0.22);
+    --ujs-complete-edge: rgba(238, 242, 248, 0.56);
     --ujs-error: white;
 }
 
@@ -1518,9 +1518,10 @@ function getUserScriptCSS() {
 .ujs-shadow {
   background: transparent;
   box-shadow:
-    0 12px 34px rgba(0,0,0,0.16),
-    0 4px 14px rgba(0,0,0,0.1);
-  opacity: 0.9;
+    0 14px 28px rgba(0,0,0,0.14),
+    0 3px 9px rgba(0,0,0,0.12),
+    0 0 0 1px rgba(255,255,255,0.06);
+  opacity: 0.86;
   transition: box-shadow 160ms ease-out, opacity 160ms ease-out;
 }
 .ujs-btn-download:hover .ujs-hover {
@@ -1528,18 +1529,19 @@ function getUserScriptCSS() {
 }
 .ujs-btn-download:hover .ujs-shadow {
   box-shadow:
-    0 13px 36px rgba(0,0,0,0.18),
-    0 5px 15px rgba(0,0,0,0.11);
+    0 15px 30px rgba(0,0,0,0.15),
+    0 4px 11px rgba(0,0,0,0.12),
+    0 0 0 1px rgba(255,255,255,0.08);
 }
 .ujs-btn-download.ujs-downloading .ujs-shadow {
   box-shadow:
-    0 12px 34px rgba(0,0,0,0.18),
-    0 0 0 1px rgba(255,255,255,0.14);
+    0 14px 28px rgba(0,0,0,0.16),
+    0 0 0 1px rgba(255,255,255,0.18);
 }
 .ujs-btn-download:active .ujs-shadow {
   box-shadow:
-    0 7px 22px rgba(0,0,0,0.14),
-    0 2px 9px rgba(0,0,0,0.1);
+    0 8px 18px rgba(0,0,0,0.13),
+    0 2px 7px rgba(0,0,0,0.1);
   opacity: 0.76;
 }
 
@@ -1571,10 +1573,10 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 
 .ujs-btn-download {
   --ujs-base-fill: var(--ujs-glass-fill);
-  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.6)" : "var(--ujs-glass-rim)"};
+  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.78)" : "var(--ujs-glass-rim)"};
   --ujs-button-fill: var(--ujs-base-fill);
   --ujs-button-rim: var(--ujs-base-rim);
-  --ujs-highlight-opacity: 0.62;
+  --ujs-highlight-opacity: 0.72;
   cursor: pointer;
   top: 12px;
   left: 12px;
@@ -1591,11 +1593,11 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 .ujs-btn-download:hover {
   --ujs-button-fill: var(--ujs-glass-fill-hover);
   --ujs-button-rim: var(--ujs-glass-rim-hover);
-  --ujs-highlight-opacity: 0.76;
+  --ujs-highlight-opacity: 0.86;
 }
 .ujs-btn-download:active {
   --ujs-button-fill: var(--ujs-glass-fill-active);
-  --ujs-highlight-opacity: 0.34;
+  --ujs-highlight-opacity: 0.48;
   transform: translateZ(0) scale(0.96);
 }
 .ujs-btn-download::before,
@@ -1607,22 +1609,27 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 .ujs-btn-download::before {
   z-index: 4;
-  inset: 1px;
+  inset: 0;
   background:
-    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.28), rgba(255,255,255,0.08) 30%, transparent 58%),
-    linear-gradient(135deg, rgba(255,255,255,0.26), rgba(255,255,255,0.06) 42%, rgba(255,255,255,0.015) 100%);
+    radial-gradient(circle at 24% 18%, rgba(255,255,255,0.62), rgba(255,255,255,0.24) 30%, rgba(255,255,255,0.06) 56%, transparent 78%),
+    linear-gradient(135deg, rgba(255,255,255,0.44), rgba(255,255,255,0.13) 36%, rgba(255,255,255,0.02) 60%, transparent 100%),
+    linear-gradient(315deg, rgba(10,16,24,0.14), rgba(10,16,24,0.045) 30%, transparent 54%);
+  box-shadow:
+    inset 1px 1px 1px rgba(255,255,255,0.86),
+    inset -1px -1px 2px rgba(0,0,0,0.18),
+    inset 0 0 0 1px rgba(255,255,255,0.22);
   opacity: var(--ujs-highlight-opacity);
   transition: opacity 160ms ease-out;
 }
 .ujs-btn-download::after {
   z-index: 5;
-  inset: 10px;
+  inset: 9px;
   background: currentColor;
   border-radius: 0;
   filter:
     drop-shadow(0 1px 1px var(--ujs-glass-glyph-shadow))
-    drop-shadow(0 0 2px rgba(0,0,0,0.28))
-    drop-shadow(0 -1px 0 rgba(255,255,255,0.24));
+    drop-shadow(0 0 2px rgba(0,0,0,0.34))
+    drop-shadow(0 -1px 0 rgba(255,255,255,0.18));
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0%200%2024%2024'%3E%3Cpath d='M12%204v10m0%200%204-4m-4%204-4-4M6%2020h12' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0%200%2024%2024'%3E%3Cpath d='M12%204v10m0%200%204-4m-4%204-4-4M6%2020h12' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   opacity: 0.96;
@@ -1640,7 +1647,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 .ujs-not-downloaded {
   --ujs-base-fill: var(--ujs-glass-fill);
-  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.6)" : "var(--ujs-glass-rim)"};
+  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.78)" : "var(--ujs-glass-rim)"};
 }
 
 .ujs-already-downloaded {
@@ -1651,16 +1658,20 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 .ujs-btn-background {
   z-index: 0;
   background:
-    linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.035) 42%, rgba(30,35,42,0.025) 100%),
+    radial-gradient(circle at 27% 18%, rgba(255,255,255,0.58), rgba(255,255,255,0.22) 31%, rgba(255,255,255,0.06) 58%, transparent 78%),
+    radial-gradient(circle at 92% 100%, rgba(12,18,28,0.15), rgba(12,18,28,0.04) 34%, transparent 58%),
+    linear-gradient(145deg, rgba(255,255,255,0.3), rgba(255,255,255,0.09) 44%, rgba(18,22,29,0.1) 100%),
     var(--ujs-button-fill);
   border: 1px solid var(--ujs-button-rim);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.13),
-    inset 1px 1px 1px rgba(255,255,255,0.42),
-    inset 0 -1px 1px rgba(0,0,0,0.08),
-    0 1px 1px rgba(255,255,255,0.06);
-  backdrop-filter: blur(22px) saturate(210%);
-  -webkit-backdrop-filter: blur(22px) saturate(210%);
+    inset 0 0 0 1px rgba(255,255,255,0.3),
+    inset 1px 1px 1px rgba(255,255,255,0.72),
+    inset -1px -1px 2px rgba(0,0,0,0.2),
+    inset 0 -8px 14px rgba(0,0,0,0.11),
+    inset 0 8px 16px rgba(255,255,255,0.1),
+    0 1px 1px rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
   transition: background 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
 
@@ -1668,8 +1679,9 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   z-index: 1;
   opacity: 0;
   background:
-    linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.07) 46%, transparent),
-    rgba(245,248,255,0.07);
+    radial-gradient(circle at 24% 16%, rgba(255,255,255,0.36), rgba(255,255,255,0.1) 45%, transparent 68%),
+    linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.07) 46%, rgba(255,255,255,0.02)),
+    rgba(244,247,252,0.05);
   transition: opacity 160ms ease-out;
 }
 
@@ -1703,8 +1715,8 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 
 .ujs-error {
-  --ujs-base-fill: rgba(255,255,255,0.32);
-  --ujs-base-rim: rgba(255,255,255,0.68);
+  --ujs-base-fill: rgba(255,255,255,0.38);
+  --ujs-base-rim: rgba(255,255,255,0.8);
 }
 .ujs-error::after {
   opacity: 0.18;
@@ -1781,8 +1793,10 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background:
-      linear-gradient(145deg, rgba(255,255,255,0.82), rgba(255,255,255,0.3)),
-      linear-gradient(160deg, var(--ujs-status-edge), var(--ujs-status-tint));
+      radial-gradient(circle at 24% 18%, rgba(255,255,255,0.62), rgba(255,255,255,0.18) 48%, transparent 72%),
+      linear-gradient(145deg, rgba(255,255,255,0.38), rgba(255,255,255,0.16) 46%, rgba(20,24,30,0.12)),
+      var(--ujs-button-fill);
+    border-color: var(--ujs-button-rim);
   }
 }
 
