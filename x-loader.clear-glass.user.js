@@ -1499,15 +1499,15 @@ function getUserScriptCSS() {
     --ujs-btn-size: 44px;
     --ujs-btn-radius: 999px;
     --ujs-dot-size: 7px;
-    --ujs-glass-fill: rgba(255, 255, 255, 0.66);
-    --ujs-glass-fill-hover: rgba(255, 255, 255, 0.78);
-    --ujs-glass-fill-active: rgba(245, 247, 252, 0.56);
-    --ujs-glass-rim: rgba(255, 255, 255, 0.78);
-    --ujs-glass-rim-hover: rgba(255, 255, 255, 0.92);
-    --ujs-glass-glyph: rgb(0, 122, 255);
-    --ujs-glass-glyph-shadow: rgba(255, 255, 255, 0.65);
-    --ujs-complete-gray: rgba(255, 255, 255, 0.5);
-    --ujs-complete-edge: rgba(255, 255, 255, 0.72);
+    --ujs-glass-fill: rgba(255, 255, 255, 0.12);
+    --ujs-glass-fill-hover: rgba(255, 255, 255, 0.18);
+    --ujs-glass-fill-active: rgba(255, 255, 255, 0.08);
+    --ujs-glass-rim: rgba(255, 255, 255, 0.42);
+    --ujs-glass-rim-hover: rgba(255, 255, 255, 0.62);
+    --ujs-glass-glyph: rgba(214, 218, 222, 0.74);
+    --ujs-glass-glyph-shadow: rgba(0, 0, 0, 0.66);
+    --ujs-complete-gray: rgba(255, 255, 255, 0.1);
+    --ujs-complete-edge: rgba(255, 255, 255, 0.34);
     --ujs-error: white;
 }
 
@@ -1553,59 +1553,33 @@ function getUserScriptCSS() {
   opacity: 0.74;
 }
 
-.ujs-btn-download.ujs-downloaded.ujs-recently-downloaded {
-    opacity: 0;
-}
-
-li[role="listitem"]:hover .ujs-btn-download {
-    opacity: 1;
-}
-article[role=article]:hover .ujs-btn-download {
-    opacity: 1;
-}
-div[aria-label="${labelText}"]:hover .ujs-btn-download {
-    opacity: 1;
-}
-.ujs-btn-download.ujs-downloaded {
-    opacity: 1;
-}
-.ujs-btn-download.ujs-downloading {
-    opacity: 1;
-}
-[data-testid="videoComponent"]:hover + .ujs-btn-download {
-    opacity: 1;
-}
-[data-testid="videoComponent"] + .ujs-btn-download:hover {
-    opacity: 1;
-}
-
 .ujs-btn-download {
   --ujs-base-fill: var(--ujs-glass-fill);
-  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.78)" : "var(--ujs-glass-rim)"};
+  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.42)" : "var(--ujs-glass-rim)"};
   --ujs-button-fill: var(--ujs-base-fill);
   --ujs-button-rim: var(--ujs-base-rim);
-  --ujs-highlight-opacity: 0.72;
+  --ujs-highlight-opacity: 0.42;
   cursor: pointer;
   top: 12px;
   left: 12px;
   position: absolute;
-  opacity: 0;
+  opacity: 1;
   width: var(--ujs-btn-size);
   height: var(--ujs-btn-size);
   border-radius: var(--ujs-btn-radius);
   isolation: isolate;
   color: var(--ujs-glass-glyph);
   transform: translateZ(0);
-  transition: opacity 160ms ease-out, transform 160ms ease-out;
+  transition: transform 160ms ease-out;
 }
 .ujs-btn-download:hover {
   --ujs-button-fill: var(--ujs-glass-fill-hover);
   --ujs-button-rim: var(--ujs-glass-rim-hover);
-  --ujs-highlight-opacity: 0.86;
+  --ujs-highlight-opacity: 0.58;
 }
 .ujs-btn-download:active {
   --ujs-button-fill: var(--ujs-glass-fill-active);
-  --ujs-highlight-opacity: 0.48;
+  --ujs-highlight-opacity: 0.3;
   transform: translateZ(0) scale(0.96);
 }
 .ujs-btn-download::before,
@@ -1619,8 +1593,8 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   z-index: 4;
   inset: 1px;
   background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.78), rgba(255,255,255,0.24) 34%, transparent 62%),
-    linear-gradient(145deg, rgba(255,255,255,0.36), rgba(255,255,255,0.08) 48%, rgba(0,0,0,0.04) 100%);
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.46), rgba(255,255,255,0.12) 34%, transparent 62%),
+    linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 48%, rgba(0,0,0,0.06) 100%);
   opacity: var(--ujs-highlight-opacity);
   mix-blend-mode: screen;
   transition: opacity 160ms ease-out;
@@ -1632,7 +1606,9 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   border-radius: 0;
   filter:
     drop-shadow(0 1px 0 var(--ujs-glass-glyph-shadow))
-    drop-shadow(0 1px 2px rgba(0,0,0,0.12));
+    drop-shadow(0 2px 3px rgba(0,0,0,0.44))
+    drop-shadow(0 0 5px rgba(0,0,0,0.34))
+    drop-shadow(0 -1px 0 rgba(255,255,255,0.2));
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0%200%2024%2024'%3E%3Cpath d='M12%204v10m0%200%204-4m-4%204-4-4M6%2020h12' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0%200%2024%2024'%3E%3Cpath d='M12%204v10m0%200%204-4m-4%204-4-4M6%2020h12' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
   opacity: 0.96;
@@ -1650,7 +1626,7 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 }
 .ujs-not-downloaded {
   --ujs-base-fill: var(--ujs-glass-fill);
-  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.78)" : "var(--ujs-glass-rim)"};
+  --ujs-base-rim: ${settings.addBorder ? "rgba(255,255,255,0.42)" : "var(--ujs-glass-rim)"};
 }
 
 .ujs-already-downloaded {
@@ -1663,18 +1639,18 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
 .ujs-btn-background {
   z-index: 0;
   background:
-    radial-gradient(circle at 30% 24%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.62) 28%, rgba(255,255,255,0.3) 58%, rgba(255,255,255,0.18) 100%),
-    linear-gradient(145deg, rgba(255,255,255,0.74), rgba(255,255,255,0.48) 45%, rgba(215,220,230,0.34) 100%),
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.1) 32%, transparent 62%),
+    linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 46%, rgba(0,0,0,0.08) 100%),
     var(--ujs-button-fill);
   border: 1px solid var(--ujs-button-rim);
   box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.92),
-    inset 1px 1px 2px rgba(255,255,255,0.62),
-    inset -1px -2px 3px rgba(0,0,0,0.16),
-    inset 0 -8px 16px rgba(0,0,0,0.08),
-    0 1px 1px rgba(255,255,255,0.24);
-  backdrop-filter: blur(20px) saturate(180%) brightness(1.08);
-  -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.08);
+    inset 0 1px 1px rgba(255,255,255,0.42),
+    inset 1px 1px 2px rgba(255,255,255,0.2),
+    inset -1px -2px 3px rgba(0,0,0,0.18),
+    inset 0 -8px 16px rgba(0,0,0,0.1),
+    0 1px 1px rgba(255,255,255,0.12);
+  backdrop-filter: blur(18px) saturate(190%) contrast(1.08) brightness(1.06);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) contrast(1.08) brightness(1.06);
   transition: background 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
 
@@ -1682,8 +1658,8 @@ div[aria-label="${labelText}"]:hover .ujs-btn-download {
   z-index: 1;
   opacity: 0;
   background:
-    radial-gradient(circle at 25% 18%, rgba(255,255,255,0.42), rgba(255,255,255,0.14) 46%, transparent 70%),
-    linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06) 48%, rgba(255,255,255,0.02));
+    radial-gradient(circle at 25% 18%, rgba(255,255,255,0.24), rgba(255,255,255,0.08) 46%, transparent 70%),
+    linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02) 48%, transparent);
   transition: opacity 160ms ease-out;
 }
 
