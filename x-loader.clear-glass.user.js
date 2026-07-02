@@ -1499,12 +1499,12 @@ function getUserScriptCSS() {
     --ujs-btn-size: 44px;
     --ujs-btn-radius: 999px;
     --ujs-dot-size: 7px;
-    --ujs-glass-fill: rgba(255, 255, 255, 0.12);
-    --ujs-glass-fill-hover: rgba(255, 255, 255, 0.18);
-    --ujs-glass-fill-active: rgba(255, 255, 255, 0.08);
-    --ujs-glass-rim: rgba(255, 255, 255, 0.42);
-    --ujs-glass-rim-hover: rgba(255, 255, 255, 0.62);
-    --ujs-glass-glyph: rgba(214, 218, 222, 0.74);
+    --ujs-glass-fill: rgba(160, 160, 160, 0.38);
+    --ujs-glass-fill-hover: rgba(170, 170, 170, 0.46);
+    --ujs-glass-fill-active: rgba(145, 145, 145, 0.42);
+    --ujs-glass-rim: rgba(255, 255, 255, 0.58);
+    --ujs-glass-rim-hover: rgba(255, 255, 255, 0.72);
+    --ujs-glass-glyph: rgba(170, 170, 170, 0.82);
     --ujs-glass-glyph-shadow: rgba(0, 0, 0, 0.66);
     --ujs-complete-gray: rgba(255, 255, 255, 0.1);
     --ujs-complete-edge: rgba(255, 255, 255, 0.34);
@@ -1639,18 +1639,15 @@ function getUserScriptCSS() {
 .ujs-btn-background {
   z-index: 0;
   background:
-    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.1) 32%, transparent 62%),
-    linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 46%, rgba(0,0,0,0.08) 100%),
-    var(--ujs-button-fill);
-  border: 1px solid var(--ujs-button-rim);
+    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.08)),
+    rgba(150,150,150,0.36);
+  border: 1px solid rgba(255,255,255,0.62);
   box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.42),
-    inset 1px 1px 2px rgba(255,255,255,0.2),
-    inset -1px -2px 3px rgba(0,0,0,0.18),
-    inset 0 -8px 16px rgba(0,0,0,0.1),
-    0 1px 1px rgba(255,255,255,0.12);
-  backdrop-filter: blur(18px) saturate(190%) contrast(1.08) brightness(1.06);
-  -webkit-backdrop-filter: blur(18px) saturate(190%) contrast(1.08) brightness(1.06);
+    inset 0 1px 1px rgba(255,255,255,0.65),
+    inset 0 -1px 2px rgba(0,0,0,0.22),
+    0 8px 18px rgba(0,0,0,0.28);
+  backdrop-filter: blur(18px) saturate(160%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(160%) brightness(1.08);
   transition: background 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
 
