@@ -350,6 +350,10 @@ The current metadata points to the upstream Greasy Fork update URLs. Reinstall
 this repository's `x-loader.user.js`, then disable automatic updates for it or
 replace those metadata URLs with URLs controlled by this fork.
 
+## Support
+
+Support X-Loader on [Ko-fi](https://ko-fi.com/paytonison).
+
 ## Development
 
 There is no build step, package manager, or generated bundle. Edit

@@ -13,6 +13,7 @@
 // @downloadURL https://update.greasyfork.org/scripts/430132/Twitter%20Click%27n%27Save.user.js
 // @updateURL https://update.greasyfork.org/scripts/430132/Twitter%20Click%27n%27Save.meta.js
 // ==/UserScript==
+// Support X-Loader: https://ko-fi.com/paytonison
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 
